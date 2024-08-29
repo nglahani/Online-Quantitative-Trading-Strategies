@@ -1,2 +1,2 @@
 # Online-Quantitative-Trading-Strategies
-The paper titled "Online Portfolio Selection: A Survey" provides a comprehensive overview of various algorithms and strategies developed for online portfolio selection, a crucial problem in computational finance. This repository seeks to test the performance of these strategies in Python.
+The paper titled "Online Portfolio Selection: A Survey" (https://ink.library.smu.edu.sg/cgi/viewcontent.cgi?params=/context/sis_research/article/3263/&path_info=Online_Portfolio_Selection__A_Survey_afv.pdf) provides a comprehensive overview of various algorithms and strategies developed for online portfolio selection, a crucial problem in computational finance. This repository seeks to test the performance of these strategies in Python.
