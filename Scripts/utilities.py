@@ -23,6 +23,13 @@ def project_to_simplex(v):
     theta = cssv[rho] / (rho + 1.0)
     return np.maximum(v - theta, 0)
 
+def calculate_l1_median(data):
+    def objective_function(mu):
+        return np.sum(np.linalg.norm(data - mu, axis=1))
+    initial_guess = np.mean(data, axis=0)
+    result = minimize(objective_function, initial_guess)
+    return result.x
+
 def calculate_price_relative_vectors(folder_path, tickers):
     """
     Function to calculate the price relative vector for multiple stocks and return them side by side.
