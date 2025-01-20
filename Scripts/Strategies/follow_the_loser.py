@@ -7,7 +7,8 @@ import numpy as np
 import os
 from scipy.optimize import minimize
 
-from .. import utilities
+from Strategies.helper import *
+
 
 # Strategy 9: Anti-Correlation (Anticor) - Simplified
 def anticor(b, price_relative_vectors, window_size=5):
@@ -103,8 +104,7 @@ def cwmr(b, price_relative_vectors, epsilon=0.5, theta=0.95):
         Sigma_t_inv = np.linalg.inv(Sigma_t + np.eye(N)*1e-12)
         Sigma_t_inv += 2 * lambda_t * theta * np.outer(x_t, x_t)
         Sigma_t = np.linalg.inv(Sigma_t_inv)
-
-        mu_t = utilities.project_to_simplex(mu_t)
+        mu_t = project_to_simplex(mu_t)
         b_n[t] = mu_t
 
     return b_n
@@ -131,7 +131,7 @@ def olmar(b, price_relative_vectors, window_size=10, epsilon=0.5):
         if x_t_tilde_mean < epsilon:
             tau = (epsilon - x_t_tilde_mean)/ (np.dot(x_t_tilde, x_t_tilde)+1e-15)
             b_t1 = b_t + tau*(x_t_tilde - b_t)
-            b_t1 = utilities.project_to_simplex(b_t1)
+            b_t1 = project_to_simplex(b_t1)
         else:
             b_t1 = b_t
         b_n[t] = b_t1
@@ -160,7 +160,7 @@ def rmr(b, price_relative_vectors, window_size=10, epsilon=0.8):
         if x_t_tilde_mean < epsilon:
             tau = (epsilon - x_t_tilde_mean)/ (np.dot(x_t_tilde, x_t_tilde)+1e-15)
             b_t1 = b_t + tau*(x_t_tilde - b_t)
-            b_t1 = utilities.project_to_simplex(b_t1)
+            b_t1 = project_to_simplex(b_t1)
         else:
             b_t1 = b_t
         b_n[t] = b_t1
