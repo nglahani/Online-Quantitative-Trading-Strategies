@@ -7,6 +7,8 @@ import numpy as np
 import os
 from scipy.optimize import minimize
 
+from .. import utilities
+
 # Strategy 1: Buy and Hold
 def buy_and_hold(b, price_relative_vectors):
     """

@@ -7,6 +7,8 @@ import numpy as np
 import os
 from scipy.optimize import minimize
 
+from .. import utilities
+
 def histogram_based_selection(price_relative_vectors, w=5, bins=[(0,0.5),(0.5,1),(1,1.5)]):
     n = len(price_relative_vectors)
     if n < w:

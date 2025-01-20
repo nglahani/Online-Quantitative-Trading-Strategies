@@ -7,6 +7,8 @@ import numpy as np
 import os
 from scipy.optimize import minimize
 
+from .. import utilities
+
 # Strategy 4: Universal Portfolios (Approximation)
 def universal_portfolios(b, price_relative_vectors, num_portfolios=500):
     """
@@ -100,7 +102,7 @@ def follow_the_regularized_leader(b, price_relative_vectors, beta=0.1, delta=0.5
         p_t = (1 + (1 / beta)) * grad_sum
 
         new_b = np.linalg.inv(A_t).dot(p_t) * delta
-        new_b = project_to_simplex(new_b)
+        new_b = utilities.project_to_simplex(new_b)
         b_n[t] = new_b
 
     return b_n

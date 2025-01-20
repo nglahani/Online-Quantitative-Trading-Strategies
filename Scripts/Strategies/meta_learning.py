@@ -7,6 +7,8 @@ import numpy as np
 import os
 from scipy.optimize import minimize
 
+from .. import utilities
+
 def aggregation_algorithm_generalized(b, price_relative_vectors, learning_rate=0.5):
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
@@ -117,7 +119,7 @@ def online_newton_update_meta(b, price_relative_vectors, learning_rate=0.1, delt
             A += np.outer(losses, losses)
             A_inv = np.linalg.inv(A + np.eye(M)*1e-12)
             w_next = w_experts - (1.0/learning_rate)* A_inv.dot(losses)
-            w_experts = project_to_simplex(w_next)
+            w_experts = utilities.project_to_simplex(w_next)
 
             for i, expert in enumerate(base_experts):
                 full_b = expert(expert_portfolios[i], price_relative_vectors[:t+1])
@@ -133,7 +135,7 @@ def ons_single_step(current_portfolio, x_t, A, eta=0.1):
     A += np.outer(grad, grad)
     A_inv = np.linalg.inv(A + np.eye(len(x_t))*1e-12)
     b_next = current_portfolio - (1.0/eta)* A_inv.dot(grad)
-    b_next = project_to_simplex(b_next)
+    b_next = utilities.project_to_simplex(b_next)
     return b_next, A
 
 class ONSExpert:
