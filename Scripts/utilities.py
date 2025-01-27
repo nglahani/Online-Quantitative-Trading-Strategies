@@ -9,6 +9,27 @@ pd.set_option('future.no_silent_downcasting', True)
 ##############################################################################
 # PROJECT / UTILITY CODE
 ##############################################################################
+def get_all_tickers(folder_path):
+    """
+    Scans subdirectories for CSV files named table_<TICKER>.csv
+    and returns a list of all unique tickers found.
+    """
+    folder_names = [
+        name for name in os.listdir(folder_path)
+        if os.path.isdir(os.path.join(folder_path, name)) and name.startswith('allstocks')
+    ]
+
+    ticker_set = set()
+
+    for date_folder in folder_names:
+        date_path = os.path.join(folder_path, date_folder)
+        for fname in os.listdir(date_path):
+            # Check for files named "table_<TICKER>.csv"
+            if fname.startswith("table_") and fname.endswith(".csv"):
+                ticker = fname[len("table_"):-len(".csv")]
+                ticker_set.add(ticker)
+
+    return sorted(ticker_set)
 
 def initialize_portfolio(m):
     return np.ones(m) / m
@@ -86,3 +107,45 @@ def calculate_cumulative_wealth_over_time(b_n_1, price_relative_vectors, S0=1.0)
         wealth = wealth * r_t
         cumulative_wealth[t] = wealth
     return cumulative_wealth
+
+def compute_periodic_returns(cumulative_wealth):
+    """
+    Given a time series of portfolio wealth, compute the *periodic* returns array.
+    If W_t is the wealth at time t, then the return for time t is (W_t / W_{t-1} - 1).
+    The first return is NaN or 0 by convention, so we drop it.
+    """
+    # shift(1) to get the previous wealth
+    # daily_return_t = (W_t / W_{t-1}) - 1
+    # We skip the very first period since there's no "previous" wealth in the array.
+    
+    w = pd.Series(cumulative_wealth)  # convert to pandas for convenience
+    returns = w.pct_change().dropna()  # drop the first NaN
+    return returns.values  # convert back to a NumPy array
+
+def compute_sharpe_ratio(returns, freq=252, risk_free_rate=0.0):
+    """
+    Compute the (annualized) Sharpe ratio given a series of periodic returns.
+    :param returns: A NumPy or pandas array of *periodic* returns. 
+                    (For daily data, each element could be the single-day return.)
+    :param freq: Number of periods in a year (default 252 for daily data)
+    :param risk_free_rate: Risk-free return for one *year*. If 0, then no adjustment.
+    :return: Sharpe ratio (float)
+    """
+    # Convert annual risk-free rate to a single-period risk-free return
+    # For daily: (1 + Rf_annual)^(1/252) - 1
+    rf_periodic = (1 + risk_free_rate)**(1/freq) - 1
+    
+    # Excess returns over each period
+    excess_returns = returns - rf_periodic
+
+    # Handle edge-cases (e.g., zero or near-zero standard deviation)
+    std_excess = excess_returns.std()
+    if std_excess < 1e-14:
+        return np.nan
+    
+    # Mean of excess returns
+    mean_excess = excess_returns.mean()
+    
+    # Annualize the Sharpe ratio
+    sharpe = (mean_excess / std_excess) * np.sqrt(freq)
+    return sharpe
