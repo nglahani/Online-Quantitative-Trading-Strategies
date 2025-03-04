@@ -1,6 +1,6 @@
 #############################################################################
 # META-LEARNING ALGORITHMS
-##############################################################################
+#############################################################################
 
 import pandas as pd
 import numpy as np
@@ -18,25 +18,25 @@ def aggregation_algorithm_generalized(b, price_relative_vectors, learning_rate=0
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
     b_n[0] = b
-    expert_weights = np.ones(N)/N
+    expert_weights = np.ones(N) / N
 
     for t in range(T):
         expert_weights /= np.sum(expert_weights)
         b_n[t] = expert_weights
-        if t < T-1:
+        if t < T - 1:
             x_t = price_relative_vectors[t]
             losses = -np.log(x_t + 1e-15)  # each asset is "expert"
             expert_weights *= np.exp(-learning_rate * losses)
-
     return b_n
+
 
 def fast_universalization(b, price_relative_vectors, learning_rate=0.5):
     base_experts = [cwmr, olmar, pamr]
     T, N = price_relative_vectors.shape
     M = len(base_experts)
 
-    expert_weights = np.ones(M)/M
-    b_n = np.zeros((T,N))
+    expert_weights = np.ones(M) / M
+    b_n = np.zeros((T, N))
     b_n[0] = b.copy()
 
     expert_portfolios = np.array([b.copy() for _ in range(M)])
@@ -45,19 +45,21 @@ def fast_universalization(b, price_relative_vectors, learning_rate=0.5):
         meta_portfolio = np.dot(expert_weights, expert_portfolios)
         b_n[t] = meta_portfolio
 
-        if t < T-1:
+        if t < T - 1:
             x_t = price_relative_vectors[t]
-            expert_performance = np.array([np.dot(expert_portfolios[i], x_t) for i in range(M)])
-            losses = -np.log(expert_performance+1e-15)
-            expert_weights *= np.exp(-learning_rate*losses)
+            # Vectorized dot product over experts: expert_portfolios has shape (M, N)
+            expert_performance = np.dot(expert_portfolios, x_t)
+            losses = -np.log(expert_performance + 1e-15)
+            expert_weights *= np.exp(-learning_rate * losses)
             expert_weights /= np.sum(expert_weights)
 
-            # Update each expert
+            # Update each expert portfolio using its own strategy
             for i, expert in enumerate(base_experts):
                 full_b = expert(expert_portfolios[i], price_relative_vectors[:t+1])
                 expert_portfolios[i] = full_b[-1]
 
     return b_n
+
 
 def build_expert_portfolios(base_experts, b, price_relative_vectors):
     T, N = price_relative_vectors.shape
@@ -68,17 +70,18 @@ def build_expert_portfolios(base_experts, b, price_relative_vectors):
     for t in range(T):
         for i, expert in enumerate(base_experts):
             expert_portfolios[t, :, i] = current_portfolios[i]
-        if t < T-1:
+        if t < T - 1:
             for i, expert in enumerate(base_experts):
                 full_b = expert(current_portfolios[i], price_relative_vectors[:t+1])
                 current_portfolios[i] = full_b[-1]
     return expert_portfolios
 
+
 def online_gradient_update_meta(b, price_relative_vectors, learning_rate=0.1):
     base_experts = [cwmr, follow_the_regularized_leader, pamr]
     T, N = price_relative_vectors.shape
     M = len(base_experts)
-    expert_weights = np.ones(M)/M
+    expert_weights = np.ones(M) / M
 
     b_n = np.zeros((T, N))
     b_n[0] = b.copy()
@@ -88,11 +91,12 @@ def online_gradient_update_meta(b, price_relative_vectors, learning_rate=0.1):
         meta_portfolio = np.dot(expert_weights, expert_portfolios)
         b_n[t] = meta_portfolio
 
-        if t < T-1:
+        if t < T - 1:
             x_t = price_relative_vectors[t]
-            expert_returns = np.array([np.dot(expert_portfolios[i], x_t) for i in range(M)])
-            losses = -np.log(expert_returns+1e-15)
-            w_next = expert_weights * np.exp(-learning_rate*losses)
+            # Vectorized dot product for expert returns:
+            expert_returns = np.dot(expert_portfolios, x_t)
+            losses = -np.log(expert_returns + 1e-15)
+            w_next = expert_weights * np.exp(-learning_rate * losses)
             w_next /= np.sum(w_next)
             expert_weights = w_next
 
@@ -102,28 +106,35 @@ def online_gradient_update_meta(b, price_relative_vectors, learning_rate=0.1):
 
     return b_n
 
+
 def online_newton_update_meta(b, price_relative_vectors, learning_rate=0.1, delta=1e-2):
     base_experts = [cwmr, olmar, exponential_gradient]
     T, N = price_relative_vectors.shape
     M = len(base_experts)
-    w_experts = np.ones(M)/M
+    w_experts = np.ones(M) / M
     b_n = np.zeros((T, N))
     b_n[0] = b.copy()
     expert_portfolios = np.array([b.copy() for _ in range(M)])
-    A = np.eye(M)*delta
+    # Initialize A_inv as the inverse of delta*I
+    A_inv = np.eye(M) / delta
 
     for t in range(T):
         aggregated_portfolio = np.dot(w_experts, expert_portfolios)
         b_n[t] = aggregated_portfolio
 
-        if t < T-1:
+        if t < T - 1:
             x_t = price_relative_vectors[t]
-            expert_returns = np.array([np.dot(expert_portfolios[i], x_t) for i in range(M)])
-            losses = -np.log(expert_returns+1e-15)
+            expert_returns = np.dot(expert_portfolios, x_t)
+            losses = -np.log(expert_returns + 1e-15)
 
-            A += np.outer(losses, losses)
-            A_inv = np.linalg.inv(A + np.eye(M)*1e-12)
-            w_next = w_experts - (1.0/learning_rate)* A_inv.dot(losses)
+            # Update A_inv using the Sherman–Morrison formula:
+            u = losses.reshape(-1, 1)  # Column vector
+            denom = 1.0 + (u.T @ A_inv @ u)[0, 0]
+            numerator = A_inv @ u @ (u.T @ A_inv)
+            A_inv = A_inv - numerator / denom
+
+            # Compute new weights using the updated A_inv
+            w_next = w_experts - (1.0 / learning_rate) * (A_inv @ losses)
             w_experts = project_to_simplex(w_next)
 
             for i, expert in enumerate(base_experts):
@@ -132,23 +143,25 @@ def online_newton_update_meta(b, price_relative_vectors, learning_rate=0.1, delt
 
     return b_n
 
+
 # FOLLOW-THE-LEADING-HISTORY IMPLEMENTATION
 
 def ons_single_step(current_portfolio, x_t, A, eta=0.1):
     port_return = np.dot(current_portfolio, x_t)
-    grad = -x_t/(port_return+1e-15)
+    grad = -x_t / (port_return + 1e-15)
     A += np.outer(grad, grad)
-    A_inv = np.linalg.inv(A + np.eye(len(x_t))*1e-12)
-    b_next = current_portfolio - (1.0/eta)* A_inv.dot(grad)
+    A_inv = np.linalg.inv(A + np.eye(len(x_t)) * 1e-12)
+    b_next = current_portfolio - (1.0 / eta) * A_inv.dot(grad)
     b_next = project_to_simplex(b_next)
     return b_next, A
+
 
 class ONSExpert:
     def __init__(self, b_init, start_time, N, delta=1e-2):
         self.b_current = b_init.copy()
         self.start_time = start_time
         self.N = N
-        self.A = np.eye(N)*delta
+        self.A = np.eye(N) * delta
 
     def update(self, t, price_relative_vectors, eta=0.1):
         """
@@ -160,13 +173,15 @@ class ONSExpert:
     def get_portfolio(self):
         return self.b_current
 
+
 def meta_weighted_majority(expert_portfolios, meta_weights, x_t, learning_rate=0.5):
     M, N = expert_portfolios.shape
     expert_returns = np.einsum('mn,n->m', expert_portfolios, x_t)
-    losses = -np.log(expert_returns+1e-15)
-    new_weights = meta_weights * np.exp(-learning_rate*losses)
+    losses = -np.log(expert_returns + 1e-15)
+    new_weights = meta_weights * np.exp(-learning_rate * losses)
     new_weights /= np.sum(new_weights)
     return new_weights
+
 
 def follow_the_leading_history(b_init, price_relative_vectors, eta=0.1, learning_rate=0.5, drop_threshold=0.01):
     """
@@ -200,13 +215,9 @@ def follow_the_leading_history(b_init, price_relative_vectors, eta=0.1, learning
         # After we've decided on b_n[t], we see the actual price relative x_t and update
         if t < T - 1:
             x_t = price_relative_vectors[t]
-            # Weighted Majority meta update
             meta_weights = meta_weighted_majority(expert_portfolios, meta_weights, x_t, learning_rate)
-
-            # Update each expert from time t to t+1
             for i, expert in enumerate(experts):
                 expert.update(t, price_relative_vectors, eta=eta)
-
             # Drop experts below threshold
             active_idxs = np.where(meta_weights >= drop_threshold)[0]
             if len(active_idxs) == 0 and len(meta_weights) > 0:
@@ -216,6 +227,6 @@ def follow_the_leading_history(b_init, price_relative_vectors, eta=0.1, learning
             if meta_weights.sum() > 0:
                 meta_weights /= meta_weights.sum()
             else:
-                meta_weights = np.ones(len(experts))/len(experts)
+                meta_weights = np.ones(len(experts)) / len(experts)
 
     return b_n

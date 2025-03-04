@@ -37,44 +37,77 @@ def initialize_portfolio(m):
 
 def calculate_price_relative_vectors(folder_path, tickers):
     """
-    Function to calculate the price relative vector for multiple stocks and return them side by side.
+    Create a DataFrame of price relative vectors for each day and each ticker.
+    If a ticker did not exist (missing file) on a certain day, the close price is NaN.
+    Then we forward-fill the close prices so that short gaps become continuous.
+    Finally, the ratio x_{t} = Close[t]/Close[t-1]. If no prior close is available
+    (e.g. brand-new ticker), set ratio = 1.0 on that day.
     """
-    folder_names = [name for name in os.listdir(folder_path) 
-                    if os.path.isdir(os.path.join(folder_path, name)) and name.startswith('allstocks')]
 
-    price_relative_df = pd.DataFrame()
-    column_names = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Split Factor', 'Earnings', 'Dividends']
+    # 1) Gather all folder names that start with "allstocks_"
+    folder_names = [
+        name for name in os.listdir(folder_path)
+        if os.path.isdir(os.path.join(folder_path, name)) and name.startswith("allstocks_")
+    ]
+    # Sort them so they’re in chronological order
+    folder_names.sort()
 
-    for ticker in tickers:
-        close_price_df = pd.DataFrame(columns=['Ticker', 'Date', 'Close'])
+    # 2) Parse out the date portion (YYYYMMDD) and build an index of dates
+    date_list = []
+    for folder_name in folder_names:
+        date_str = folder_name.replace("allstocks_", "")
+        date_obj = pd.to_datetime(date_str, format="%Y%m%d", errors="coerce")
+        date_list.append(date_obj)
 
-        for date in folder_names: 
-            stock_file = 'table_' + ticker + '.csv'
-            file_path = os.path.join(folder_path, date, stock_file)
+    # Create a DataFrame of shape (num_days, num_tickers), all NaNs at first
+    price_df = pd.DataFrame(index=date_list, columns=tickers, dtype=float)
+    
+    column_names = [
+        'Date', 'Time', 'Open', 'High', 'Low', 
+        'Close', 'Volume', 'Split Factor', 'Earnings', 'Dividends'
+    ]
 
-            iter_df = pd.read_csv(file_path)
-            iter_df.columns = column_names
+    # 3) Loop over each folder/day and fill in close price if file is found
+    total_folders = len(folder_names)
+    for i, folder_name in enumerate(folder_names, start=1):
+        date_str = folder_name.replace("allstocks_", "")
+        date_obj = pd.to_datetime(date_str, format="%Y%m%d", errors="coerce")
+        day_path = os.path.join(folder_path, folder_name)
+        
+        # Optimization: list all files in the folder once
+        available_files = set(os.listdir(day_path))
+        
+        for ticker in tickers:
+            file_name = f"table_{ticker}.csv"
+            if file_name not in available_files:
+                continue
 
-            last_row = iter_df[['Date', 'Close']].iloc[-1]
-            last_row['Ticker'] = ticker
-            close_price_df = pd.concat([close_price_df, last_row.to_frame().T], ignore_index=True)
+            file_path = os.path.join(day_path, file_name)
+            df = pd.read_csv(file_path, header=None)
+            if df.empty:
+                print(f"Warning: {file_path} is empty. Skipping file.")
+                continue
 
-        close_price_df['Date'] = close_price_df['Date'].astype(int)
-        close_price_df['Date'] = pd.to_datetime(close_price_df['Date'], format='%Y%m%d')
-        close_price_df.set_index('Date', inplace=True)
+            df.columns = column_names
+            # Use the last row's close price as representative for the day.
+            last_close = df['Close'].iloc[-1]
+            price_df.at[date_obj, ticker] = last_close
 
-        close_price_df[ticker] = (close_price_df['Close'] / close_price_df['Close'].shift(1)).fillna(1)
+        # Optional progress update (print every 10 folders or at the last folder)
+        if i % 20 == 0 or i == total_folders:
+            print(f"Processed {i}/{total_folders} folders.")
 
-        if price_relative_df.empty:
-            price_relative_df = close_price_df[[ticker]]
-        else:
-            price_relative_df = price_relative_df.join(close_price_df[[ticker]], how='outer')
+    # 4) Forward-fill the close prices across days
+    price_df.sort_index(inplace=True)
+    price_df.fillna(method="ffill", inplace=True)
 
-        price_relative_df = price_relative_df.astype(float)
-        price_relative_df[price_relative_df <= 0] = 1e-10
+    # 5) Compute price relative = Close[t] / Close[t-1]
+    price_relative_df = price_df / price_df.shift(1)
+    price_relative_df.iloc[0, :] = 1.0  # Set first day to 1.0
+    price_relative_df.fillna(1.0, inplace=True)
+    price_relative_df[price_relative_df <= 0] = 1e-10
 
     return price_relative_df
-
 
 def calculate_period_return(b_t, x_t):
     """ Calculate the return of the portfolio in a single period. """
