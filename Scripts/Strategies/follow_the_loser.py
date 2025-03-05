@@ -11,11 +11,19 @@ from Strategies.helper import *
 
 
 # Strategy 9: Anti-Correlation (Anticor) - Simplified and Vectorized
-def anticor(b, price_relative_vectors, window_size=5):
+def anticor(b, price_relative_vectors, window_size=5, alpha=1.0, corr_threshold=0.0):
     """
-    Implements a simplified anticorrelation strategy.
-    Uses two windows of log-price relatives to compute the cross-correlation matrix.
-    The transfer amounts for each asset are computed in a vectorized manner.
+    Implements a simplified anticorrelation strategy with additional parameters.
+    
+    Parameters:
+        b: Initial portfolio weight vector.
+        price_relative_vectors: A T x N numpy array where each row is a price relative vector.
+        window_size: The window size to compute log-price relatives for correlation estimation.
+        alpha: Transfer scaling factor to control aggressiveness.
+        corr_threshold: Only correlations above this threshold are used in computing transfers.
+        
+    Returns:
+        b_n: A T x N array representing the portfolio weights over time.
     """
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
@@ -23,32 +31,37 @@ def anticor(b, price_relative_vectors, window_size=5):
 
     for t in range(1, T):
         if t >= 2 * window_size:
-            # Compute log price relatives for two successive windows
+            # Compute log-price relatives for two successive windows
             y1 = np.log(price_relative_vectors[t - 2*window_size : t - window_size])
             y2 = np.log(price_relative_vectors[t - window_size : t])
-
+            
             if y1.shape[0] > 0 and y2.shape[0] > 0:
-                # Compute means (not strictly used further but available if needed)
+                # Compute means (available if needed)
                 mean_y1 = np.mean(y1, axis=0)
                 mean_y2 = np.mean(y2, axis=0)
-
-                # Compute cross-covariance between the two windows; note that np.cov returns a 2N x 2N matrix,
-                # so we take the upper-right quadrant.
+                
+                # Compute cross-covariance between the two windows.
+                # np.cov returns a 2N x 2N matrix, so we take the upper-right quadrant.
                 Mcov = np.cov(y1.T, y2.T)[:N, N:]
                 std_y1 = np.std(y1, axis=0)
                 std_y2 = np.std(y2, axis=0)
+                
                 # Avoid division by zero
                 std_y1[std_y1 == 0] = 1e-10
                 std_y2[std_y2 == 0] = 1e-10
                 Mcor = Mcov / np.outer(std_y1, std_y2)
-
-                # Compute transfer amounts in vectorized fashion:
-                # For each pair (i,j) with positive correlation, subtract from asset i and add to asset j.
-                pos_corr = np.where(Mcor > 0, Mcor, 0)
-                # Note: diagonal terms cancel out automatically
+                
+                # Apply the correlation threshold: only correlations above the threshold are retained.
+                pos_corr = np.where(Mcor > corr_threshold, Mcor, 0)
+                
+                # Compute transfer amounts:
+                # For each asset, sum the incoming and outgoing transfer claims from correlations.
                 transfer_amounts = np.sum(pos_corr, axis=0) - np.sum(pos_corr, axis=1)
-
-                # Update the portfolio by applying the transfer amounts, ensuring non-negativity and renormalizing.
+                # Scale the transfer amounts by alpha.
+                transfer_amounts *= alpha
+                
+                # Update the portfolio by applying the transfer amounts,
+                # ensuring non-negativity and then renormalizing to sum to one.
                 b_star = b_n[t-1] + transfer_amounts
                 b_star = np.maximum(b_star, 0)
                 if np.sum(b_star) > 0:
