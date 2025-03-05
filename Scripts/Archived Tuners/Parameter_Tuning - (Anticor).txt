@@ -1,0 +1,115 @@
+import pandas as pd
+import numpy as np
+import itertools
+import os
+
+# Assume the necessary utility and algorithm imports are already done
+
+# -------------------------------
+# PART 1: Parameter Tuning Setup
+# -------------------------------
+price_relative_df = pd.read_csv("..\\Data\\Price Relative Vectors\\price_relative_vectors.csv", index_col=0)
+b = initialize_portfolio(price_relative_df.shape[1])
+price_relative_vectors_array = price_relative_df.values
+dates = price_relative_df.index
+
+# -------------------------------
+# Evaluation Function for anticor
+# -------------------------------
+def evaluate_anticor(b, price_relative_vectors, window_size_val, alpha_val, corr_threshold_val, freq=252, risk_free_rate=0.0):
+    """
+    Runs the anticor strategy with given parameters and returns performance metrics.
+    """
+    # Run strategy (using the anticor function defined previously)
+    b_n = anticor(b, price_relative_vectors, 
+                  window_size=window_size_val, 
+                  alpha=alpha_val,
+                  corr_threshold=corr_threshold_val)
+    
+    # Final wealth and exponential growth rate
+    final_wealth = calculate_cumulative_wealth(b_n, price_relative_vectors)
+    n_periods = len(price_relative_vectors)
+    exp_growth = calculate_exponential_growth_rate(final_wealth, n_periods)
+
+    # Sharpe ratio
+    cum_wealth = calculate_cumulative_wealth_over_time(b_n, price_relative_vectors)
+    daily_returns = compute_periodic_returns(cum_wealth)
+    sharpe = compute_sharpe_ratio(daily_returns, freq=freq, risk_free_rate=risk_free_rate)
+
+    return {
+        'algorithm': 'anticor',          # Tracking the algorithm
+        'window_size': window_size_val,
+        'alpha': alpha_val,
+        'corr_threshold': corr_threshold_val,
+        'final_wealth': final_wealth,
+        'exp_growth': exp_growth,
+        'sharpe': sharpe
+    }
+
+# -------------------------------
+# Generic Tuning Function
+# -------------------------------
+def tune_strategy(evaluation_func, b, price_relative_vectors, grid):
+    """
+    Generic tuning function that runs grid search using the provided evaluation function.
+    
+    Parameters:
+        evaluation_func: Function to evaluate an algorithm.
+        b: Initial portfolio.
+        price_relative_vectors: Price relative matrix.
+        grid: Dictionary of parameter names and lists of values, e.g.,
+              {'window_size': [3, 5, 10], 'alpha': [0.1, 0.5, 1.0], 'corr_threshold': [0.0, 0.1, 0.2]}
+    
+    Returns:
+        results_df: A DataFrame of all results.
+        best_result: The best result (dictionary) based on Sharpe ratio.
+    """
+    # Get parameter names and grid values
+    param_names = list(grid.keys())
+    param_values = list(grid.values())
+    
+    results = []
+    for params in itertools.product(*param_values):
+        # Create a dictionary of parameters for this run
+        param_dict = dict(zip(param_names, params))
+        # Call the evaluation function with the parameter values (unpack as keyword arguments)
+        result = evaluation_func(b, price_relative_vectors, 
+                                 window_size_val=param_dict['window_size'], 
+                                 alpha_val=param_dict['alpha'], 
+                                 corr_threshold_val=param_dict['corr_threshold'])
+        # Optionally, add the grid parameters to the result if not already included
+        result.update(param_dict)
+        results.append(result)
+    
+    # Convert results to a DataFrame
+    results_df = pd.DataFrame(results)
+    # Sort by Sharpe ratio descending
+    results_df.sort_values(by='sharpe', ascending=False, inplace=True)
+    # Get best result as a dictionary
+    best_result = results_df.iloc[0].to_dict()
+    return results_df, best_result
+
+# -------------------------------
+# Define the grid for anticor tuning
+# -------------------------------
+anticor_grid = {
+    'window_size': [3, 5],
+    'alpha': [1.5, 2.0],
+    'corr_threshold': [0.4, .5]
+}
+
+# -------------------------------
+# Run the tuning for anticor
+# -------------------------------
+anticor_results_df, best_anticor = tune_strategy(evaluate_anticor, b, price_relative_vectors_array, anticor_grid)
+
+# Save the results to a CSV for repeatability
+anticor_results_df.to_csv("..\\Data\\Tuning Data\\anticor_tuning_results.csv", index=False)
+
+# Display best result
+print("=== Best Anticor Tuning Result ===")
+print(best_anticor)
+
+# For debugging/inspection, you might also display the full results DataFrame:
+print("=== All Anticor Tuning Results ===")
+anticor_results_df
