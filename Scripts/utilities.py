@@ -49,17 +49,16 @@ def calculate_price_relative_vectors(folder_path, tickers):
         name for name in os.listdir(folder_path)
         if os.path.isdir(os.path.join(folder_path, name)) and name.startswith("allstocks_")
     ]
-    # Sort them so they’re in chronological order
-    folder_names.sort()
+    folder_names.sort()  # Sort chronologically by folder name (YYYYMMDD)
 
-    # 2) Parse out the date portion (YYYYMMDD) and build an index of dates
+    # 2) Parse out dates from folder names and build an index
     date_list = []
     for folder_name in folder_names:
         date_str = folder_name.replace("allstocks_", "")
         date_obj = pd.to_datetime(date_str, format="%Y%m%d", errors="coerce")
         date_list.append(date_obj)
 
-    # Create a DataFrame of shape (num_days, num_tickers), all NaNs at first
+    # Prepare a DataFrame of shape (num_days, num_tickers) with NaN placeholders
     price_df = pd.DataFrame(index=date_list, columns=tickers, dtype=float)
     
     column_names = [
@@ -67,47 +66,53 @@ def calculate_price_relative_vectors(folder_path, tickers):
         'Close', 'Volume', 'Split Factor', 'Earnings', 'Dividends'
     ]
 
+    folder_counter = 0
     # 3) Loop over each folder/day and fill in close price if file is found
-    total_folders = len(folder_names)
-    for i, folder_name in enumerate(folder_names, start=1):
+    for folder_name in folder_names:
+        folder_counter +=1
         date_str = folder_name.replace("allstocks_", "")
         date_obj = pd.to_datetime(date_str, format="%Y%m%d", errors="coerce")
+
         day_path = os.path.join(folder_path, folder_name)
-        
-        # Optimization: list all files in the folder once
-        available_files = set(os.listdir(day_path))
-        
+
         for ticker in tickers:
             file_name = f"table_{ticker}.csv"
-            if file_name not in available_files:
-                continue
-
             file_path = os.path.join(day_path, file_name)
-            df = pd.read_csv(file_path, header=None)
-            if df.empty:
-                print(f"Warning: {file_path} is empty. Skipping file.")
+
+            # If file doesn’t exist => skip (no data for that day/ticker)
+            if not os.path.exists(file_path):
                 continue
 
+            # Read CSV
+            df = pd.read_csv(file_path, header=None)
             df.columns = column_names
-            # Use the last row's close price as representative for the day.
-            last_close = df['Close'].iloc[-1]
-            price_df.at[date_obj, ticker] = last_close
 
-        # Optional progress update (print every 10 folders or at the last folder)
-        if i % 20 == 0 or i == total_folders:
-            print(f"Processed {i}/{total_folders} folders.")
+            # Take the last row's close as "the close" for that day
+            last_close = df['Close'].iloc[-1]
+
+            # Store it in price_df
+            price_df.at[date_obj, ticker] = last_close
+                # Print progress every 100 folders processed
+        if folder_counter % 100 == 0:
+            print(f"Processed {folder_counter}/{len(folder_names)} folders")
 
     # 4) Forward-fill the close prices across days
-    price_df.sort_index(inplace=True)
+    price_df.sort_index(inplace=True)  # Make sure it's sorted by date
     price_df.fillna(method="ffill", inplace=True)
 
-    # 5) Compute price relative = Close[t] / Close[t-1]
+    # 5) Compute price relatives: ratio[t] = Close[t] / Close[t-1]
     price_relative_df = price_df / price_df.shift(1)
-    price_relative_df.iloc[0, :] = 1.0  # Set first day to 1.0
+    # The very first day is NaN => set to 1.0
+    price_relative_df.iloc[0, :] = 1.0
+
+    # If a ticker only appears mid-period, previous day remains NaN => set to 1.0
     price_relative_df.fillna(1.0, inplace=True)
+
+    # Prevent zero or negative (shouldn't happen, but just in case)
     price_relative_df[price_relative_df <= 0] = 1e-10
 
     return price_relative_df
+
 
 def calculate_period_return(b_t, x_t):
     """ Calculate the return of the portfolio in a single period. """
