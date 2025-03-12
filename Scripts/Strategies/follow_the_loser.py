@@ -11,7 +11,7 @@ from Strategies.helper import *
 
 
 # Strategy 9: Anti-Correlation (Anticor) - Simplified and Vectorized
-def anticor(b, price_relative_vectors, window_size=5, alpha=1.0, corr_threshold=0.0):
+def anticor(b, price_relative_vectors, window_size=3, alpha=2.0, corr_threshold=0.5):
     """
     Implements a simplified anticorrelation strategy with additional parameters.
     
@@ -76,10 +76,19 @@ def anticor(b, price_relative_vectors, window_size=5, alpha=1.0, corr_threshold=
 
 
 # Strategy 10: PAMR (Passive Aggressive Mean Reversion)
-def pamr(b, price_relative_vectors, epsilon=0.5):
+def pamr(b, price_relative_vectors, epsilon=0.9, C=10.0):
     """
-    Implements the PAMR strategy.
+    Implements the PAMR strategy with an additional aggressiveness cap parameter C.
     Uses previous period’s price relatives to compute an adjustment factor.
+
+    Parameters:
+      b : numpy array, initial portfolio weights (shape: [N])
+      price_relative_vectors : numpy array (shape: [T, N])
+      epsilon : sensitivity threshold (default 0.5)
+      C : cap for the update step (default 1.0)
+
+    Returns:
+      b_n : numpy array of shape (T, N) representing the portfolio weights over time.
     """
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
@@ -92,7 +101,13 @@ def pamr(b, price_relative_vectors, epsilon=0.5):
         x_t_mean = np.mean(x_t)
         x_t_diff = x_t - x_t_mean
         denom = np.linalg.norm(x_t_diff) ** 2
-        tau_t = max(0, (portfolio_return - epsilon) / (denom + 1e-15)) if denom > 0 else 0
+
+        if denom > 0:
+            tau_t = (portfolio_return - epsilon) / (denom + 1e-15)
+            tau_t = max(0, tau_t)         # Ensure non-negative tau
+            tau_t = min(C, tau_t)         # Cap the update using C
+        else:
+            tau_t = 0
 
         b_t1 = b_n[t-1] - tau_t * x_t_diff
         b_t1 = np.maximum(b_t1, 0)
@@ -103,11 +118,21 @@ def pamr(b, price_relative_vectors, epsilon=0.5):
     return b_n
 
 
-# Strategy 11: CWMR (Confidence-Weighted Mean Reversion) - Simplified
-def cwmr(b, price_relative_vectors, epsilon=0.5, theta=0.95):
+#Strategy 11: CWMR (Confidence-Weighted Mean Reversion)
+def cwmr(b, price_relative_vectors, epsilon=0.91, theta=0.96, eta=.95):
     """
-    Implements a simplified version of CWMR.
+    Implements a simplified version of CWMR with an additional learning rate factor (eta).
     Maintains a mean vector (mu_t) and covariance matrix (Sigma_t) to update the portfolio.
+
+    Parameters:
+        b: Initial portfolio (numpy array)
+        price_relative_vectors: numpy array with shape (T, N)
+        epsilon: Sensitivity parameter for mean reversion (default 0.5)
+        theta: Confidence threshold parameter (default 0.95)
+        eta: Learning rate factor to scale the update (default 1.0)
+
+    Returns:
+        b_n: numpy array of shape (T, N) with portfolio weights over time.
     """
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
@@ -120,26 +145,42 @@ def cwmr(b, price_relative_vectors, epsilon=0.5, theta=0.95):
         x_t = price_relative_vectors[t-1]
         x_t_mean = np.dot(mu_t, x_t)
 
-        # Compute update factor lambda_t based on performance
+        # Compute denominator for lambda_t calculation
         denominator = x_t @ (Sigma_t @ x_t)
-        lambda_t = max(0, (x_t_mean - epsilon) / (denominator + 1e-15)) if denominator > 0 else 0
+        if denominator > 0:
+            # Incorporate the learning rate factor (eta)
+            lambda_t = eta * max(0, (x_t_mean - epsilon) / (denominator + 1e-15))
+        else:
+            lambda_t = 0
 
+        # Update the mean vector
         mu_t -= lambda_t * (Sigma_t @ x_t)
-        # Update Sigma_t via a simplified inversion update; for numerical stability, add a small ridge.
+        # Update the covariance matrix with a small ridge for numerical stability
         Sigma_t_inv = np.linalg.inv(Sigma_t + np.eye(N) * 1e-12)
         Sigma_t_inv += 2 * lambda_t * theta * np.outer(x_t, x_t)
         Sigma_t = np.linalg.inv(Sigma_t_inv)
+        # Project the updated mean to the simplex (ensure portfolio constraints)
         mu_t = project_to_simplex(mu_t)
         b_n[t] = mu_t
 
     return b_n
 
 
-# Strategy 12: OLMAR (On-Line Moving Average Reversion) - Simplified
-def olmar(b, price_relative_vectors, window_size=10, epsilon=0.5):
+#Strategy 12: OLMAR 
+def olmar(b, price_relative_vectors, window_size=2, epsilon=1.0, eta=25):
     """
-    Implements a simplified OLMAR strategy.
+    Implements a simplified OLMAR strategy with a learning rate multiplier.
     Uses a moving average of past price relatives as a prediction.
+
+    Parameters:
+        b: Initial portfolio (numpy array)
+        price_relative_vectors: numpy array of price relative vectors (shape: [T, N])
+        window_size: Window length for computing the moving average (default 10)
+        epsilon: Threshold for triggering the update (default 0.5)
+        eta: Learning rate multiplier to scale the update step (default 1.0)
+
+    Returns:
+        b_n: numpy array of shape (T, N) representing the portfolio weights over time.
     """
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
@@ -157,7 +198,7 @@ def olmar(b, price_relative_vectors, window_size=10, epsilon=0.5):
         x_t_tilde_mean = np.dot(b_t, x_t_tilde)
         if x_t_tilde_mean < epsilon:
             tau = (epsilon - x_t_tilde_mean) / (np.dot(x_t_tilde, x_t_tilde) + 1e-15)
-            b_t1 = b_t + tau * (x_t_tilde - b_t)
+            b_t1 = b_t + eta * tau * (x_t_tilde - b_t)
             b_t1 = project_to_simplex(b_t1)
         else:
             b_t1 = b_t
@@ -165,12 +206,21 @@ def olmar(b, price_relative_vectors, window_size=10, epsilon=0.5):
 
     return b_n
 
-
-# Strategy 13: RMR (Robust Median Reversion)
-def rmr(b, price_relative_vectors, window_size=10, epsilon=0.8):
+#Strategy 13: Robust Median Reversion
+def rmr(b, price_relative_vectors, window_size=7, epsilon=1.0, eta=20):
     """
-    Implements a robust median reversion strategy.
+    Implements a robust median reversion (RMR) strategy with an additional learning rate multiplier.
     Uses an L1-median computed over a sliding window of price relatives to form predictions.
+
+    Parameters:
+        b: Initial portfolio (numpy array)
+        price_relative_vectors: numpy array of price relative vectors (shape: [T, N])
+        window_size: Window length for computing the L1-median (default 10)
+        epsilon: Threshold for triggering the update (default 0.8)
+        eta: Learning rate multiplier to scale the update step (default 1.0)
+
+    Returns:
+        b_n: numpy array of shape (T, N) representing the portfolio weights over time.
     """
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
@@ -182,6 +232,7 @@ def rmr(b, price_relative_vectors, window_size=10, epsilon=0.8):
         else:
             window_data = price_relative_vectors[t-window_size : t]
 
+        # Compute the L1-median of the window data
         mu_t_plus_1 = calculate_l1_median(np.array(window_data, dtype=np.float64))
         # Predict next price relatives by comparing the median with last observed prices
         x_t_tilde = mu_t_plus_1 / (price_relative_vectors[t-1] + 1e-15)
@@ -190,10 +241,12 @@ def rmr(b, price_relative_vectors, window_size=10, epsilon=0.8):
         x_t_tilde_mean = np.dot(b_t, x_t_tilde)
         if x_t_tilde_mean < epsilon:
             tau = (epsilon - x_t_tilde_mean) / (np.dot(x_t_tilde, x_t_tilde) + 1e-15)
-            b_t1 = b_t + tau * (x_t_tilde - b_t)
+            # Scale the update with eta
+            b_t1 = b_t + eta * tau * (x_t_tilde - b_t)
             b_t1 = project_to_simplex(b_t1)
         else:
             b_t1 = b_t
         b_n[t] = b_t1
 
     return b_n
+

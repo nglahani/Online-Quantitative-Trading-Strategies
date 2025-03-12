@@ -160,7 +160,7 @@ def compute_periodic_returns(cumulative_wealth):
     returns = w.pct_change().dropna()  # drop the first NaN
     return returns.values  # convert back to a NumPy array
 
-def compute_sharpe_ratio(returns, freq=252, risk_free_rate=0.0):
+def compute_sharpe_ratio(returns, freq=252, risk_free_rate=0.05):
     """
     Compute the (annualized) Sharpe ratio given a series of periodic returns.
     :param returns: A NumPy or pandas array of *periodic* returns. 
