@@ -1,0 +1,126 @@
+import pandas as pd
+import numpy as np
+import itertools
+import os
+
+# Utility Function Imports (only import those needed)
+from utilities import *
+
+# Algorithm Imports
+from Strategies.benchmarks import *
+from Strategies.follow_the_loser import *
+from Strategies.follow_the_winner import *
+from Strategies.pattern_matching import *
+from Strategies.meta_learning import *
+
+# -------------------------------
+# PART 1: Parameter Tuning Setup
+# -------------------------------
+price_relative_df = pd.read_csv("..\\Data\\Price Relative Vectors\\price_relative_vectors.csv", index_col=0)
+b = initialize_portfolio(price_relative_df.shape[1])
+price_relative_vectors_array = price_relative_df.values
+dates = price_relative_df.index
+
+# -------------------------------
+# Evaluation Function for Follow-The-Leader (FTL) Strategy
+# -------------------------------
+def evaluate_follow_the_leader(b, price_relative_vectors, gamma, alpha, freq=252, risk_free_rate=0.05):
+    """
+    Runs the Follow-The-Leader strategy with the given hyperparameters and returns performance metrics.
+    
+    Parameters:
+        b: Initial portfolio (numpy array).
+        price_relative_vectors: numpy array of price relative vectors (shape: [T, N]).
+        gamma: Smoothing parameter (γ) used to blend the leader portfolio with the previous portfolio.
+        alpha: Scaling parameter (α) applied to the cumulative log returns.
+        freq: Frequency for Sharpe ratio calculation (default 252).
+        risk_free_rate: Risk free rate for Sharpe ratio calculation (default 0.05).
+        
+    Returns:
+        A dictionary containing performance metrics.
+    """
+    # Call the Follow-The-Leader strategy with both gamma and alpha
+    b_n = follow_the_leader(b, price_relative_vectors, gamma=gamma, alpha=alpha)
+    
+    # Final wealth and exponential growth rate
+    final_wealth = calculate_cumulative_wealth(b_n, price_relative_vectors)
+    n_periods = len(price_relative_vectors)
+    exp_growth = calculate_exponential_growth_rate(final_wealth, n_periods)
+    
+    # Compute cumulative wealth over time and periodic returns for Sharpe ratio calculation
+    cum_wealth = calculate_cumulative_wealth_over_time(b_n, price_relative_vectors)
+    daily_returns = compute_periodic_returns(cum_wealth)
+    sharpe = compute_sharpe_ratio(daily_returns, freq=freq, risk_free_rate=risk_free_rate)
+    
+    return {
+        'algorithm': 'follow_the_leader',
+        'gamma': gamma,
+        'alpha': alpha,
+        'final_wealth': final_wealth,
+        'exp_growth': exp_growth,
+        'sharpe': sharpe
+    }
+
+# -------------------------------
+# Generic Tuning Function (unchanged)
+# -------------------------------
+def tune_strategy(evaluation_func, b, price_relative_vectors, grid):
+    """
+    Generic tuning function that runs grid search using the provided evaluation function.
+    
+    Parameters:
+        evaluation_func: Function to evaluate an algorithm. It should accept the initial portfolio,
+                         price relative vectors, and keyword arguments corresponding to the grid keys.
+        b: Initial portfolio.
+        price_relative_vectors: Price relative matrix.
+        grid: Dictionary of parameter names and lists of values.
+    
+    Returns:
+        results_df: A DataFrame of all results.
+        best_result: The best result (dictionary) based on Sharpe ratio.
+    """
+    param_names = list(grid.keys())
+    param_values = list(grid.values())
+    
+    results = []
+    for params in itertools.product(*param_values):
+        # Create a dictionary of parameters for this run
+        param_dict = dict(zip(param_names, params))
+        # Call the evaluation function with the parameter values (unpack as keyword arguments)
+        result = evaluation_func(b, price_relative_vectors, **param_dict)
+        # Add grid parameters to the result (if not already included)
+        result.update(param_dict)
+        results.append(result)
+    
+    # Convert results to a DataFrame
+    results_df = pd.DataFrame(results)
+    # Sort by Sharpe ratio descending (assuming higher Sharpe is better)
+    results_df.sort_values(by='sharpe', ascending=False, inplace=True)
+    # Get best result as a dictionary
+    best_result = results_df.iloc[0].to_dict()
+    return results_df, best_result
+
+# -------------------------------
+# Define the grid for Follow-The-Leader tuning
+# -------------------------------
+ftl_grid = {
+    'gamma': [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 
+              0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0],
+    'alpha': [.1, .2, .3, .4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+}
+
+# -------------------------------
+# Run the tuning for Follow-The-Leader Strategy
+# -------------------------------
+ftl_results_df, best_ftl = tune_strategy(evaluate_follow_the_leader, b, price_relative_vectors_array, ftl_grid)
+
+# Save the results to a CSV for repeatability
+ftl_results_df.to_csv("..\\Data\\Tuning Data\\ftl_tuning_results.csv", index=False)
+
+# Display best result
+print("=== Best Follow-The-Leader Tuning Result ===")
+print(best_ftl)
+
+# For debugging/inspection, display the full results DataFrame:
+print("=== All Follow-The-Leader Tuning Results ===")
+ftl_results_df

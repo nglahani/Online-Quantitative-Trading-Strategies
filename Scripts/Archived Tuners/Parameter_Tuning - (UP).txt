@@ -1,0 +1,125 @@
+import pandas as pd
+import numpy as np
+import itertools
+import os
+
+# Utility Function Imports (only import those needed)
+from utilities import *
+
+# Algorithm Imports
+from Strategies.benchmarks import *
+from Strategies.follow_the_loser import *
+from Strategies.follow_the_winner import *
+from Strategies.pattern_matching import *
+from Strategies.meta_learning import *
+
+# -------------------------------
+# PART 1: Parameter Tuning Setup
+# -------------------------------
+price_relative_df = pd.read_csv("..\\Data\\Price Relative Vectors\\price_relative_vectors.csv", index_col=0)
+b = initialize_portfolio(price_relative_df.shape[1])
+price_relative_vectors_array = price_relative_df.values
+dates = price_relative_df.index
+
+# -------------------------------
+# Evaluation Function for Universal Portfolios (UP)
+# -------------------------------
+def evaluate_up(b, price_relative_vectors, num_portfolios, tau, freq=252, risk_free_rate=0.05):
+    """
+    Runs the Universal Portfolios strategy with given parameters and returns performance metrics.
+    
+    Parameters:
+        b: Initial portfolio (numpy array) - (not used in universal_portfolios, kept for API consistency)
+        price_relative_vectors: numpy array of price relative vectors (shape: [T, N])
+        num_portfolios: Number of random portfolios to sample.
+        tau: Wealth weighting temperature parameter.
+        freq: Frequency for Sharpe ratio calculation (default 252).
+        risk_free_rate: Risk free rate for Sharpe ratio calculation (default 0.05).
+        
+    Returns:
+        A dictionary containing performance metrics.
+    """
+    # Run Universal Portfolios strategy with given hyperparameters
+    b_n = universal_portfolios(price_relative_vectors, num_portfolios=num_portfolios, tau=tau)
+    
+    # Final wealth and exponential growth rate
+    final_wealth = calculate_cumulative_wealth(b_n, price_relative_vectors)
+    n_periods = len(price_relative_vectors)
+    exp_growth = calculate_exponential_growth_rate(final_wealth, n_periods)
+    
+    # Sharpe ratio: compute cumulative wealth over time, then periodic returns, and then Sharpe ratio
+    cum_wealth = calculate_cumulative_wealth_over_time(b_n, price_relative_vectors)
+    daily_returns = compute_periodic_returns(cum_wealth)
+    sharpe = compute_sharpe_ratio(daily_returns, freq=freq, risk_free_rate=risk_free_rate)
+    
+    return {
+        'algorithm': 'universal_portfolios',
+        'num_portfolios': num_portfolios,
+        'tau': tau,
+        'final_wealth': final_wealth,
+        'exp_growth': exp_growth,
+        'sharpe': sharpe
+    }
+
+# -------------------------------
+# Generic Tuning Function
+# -------------------------------
+def tune_strategy(evaluation_func, b, price_relative_vectors, grid):
+    """
+    Generic tuning function that runs grid search using the provided evaluation function.
+    
+    Parameters:
+        evaluation_func: Function to evaluate an algorithm. It should accept the initial portfolio,
+                         price relative vectors, and keyword arguments corresponding to the grid keys.
+        b: Initial portfolio.
+        price_relative_vectors: Price relative matrix.
+        grid: Dictionary of parameter names and lists of values.
+    
+    Returns:
+        results_df: A DataFrame of all results.
+        best_result: The best result (dictionary) based on Sharpe ratio.
+    """
+    param_names = list(grid.keys())
+    param_values = list(grid.values())
+    
+    results = []
+    for params in itertools.product(*param_values):
+        # Create a dictionary of parameters for this run
+        param_dict = dict(zip(param_names, params))
+        # Call the evaluation function with the parameter values (unpack as keyword arguments)
+        result = evaluation_func(b, price_relative_vectors, **param_dict)
+        # Add grid parameters to the result (if not already included)
+        result.update(param_dict)
+        results.append(result)
+    
+    # Convert results to a DataFrame
+    results_df = pd.DataFrame(results)
+    # Sort by Sharpe ratio descending (assuming higher Sharpe is better)
+    results_df.sort_values(by='sharpe', ascending=False, inplace=True)
+    # Get best result as a dictionary
+    best_result = results_df.iloc[0].to_dict()
+    return results_df, best_result
+
+# -------------------------------
+# Define the grid for UP tuning
+# -------------------------------
+up_grid = {
+    'num_portfolios': [2, 3, 4, 5, 10, 20, 50, 100],
+    'tau': [0.05, .1, .2, .3, .4, .5, 3.0]
+}
+
+# -------------------------------
+# Run the tuning for Universal Portfolios
+# -------------------------------
+up_results_df, best_up = tune_strategy(evaluate_up, b, price_relative_vectors_array, up_grid)
+
+# Save the results to a CSV for repeatability
+up_results_df.to_csv("..\\Data\\Tuning Data\\up_tuning_results.csv", index=False)
+
+# Display best result
+print("=== Best Universal Portfolios Tuning Result ===")
+print(best_up)
+
+# For debugging/inspection, display the full results DataFrame:
+print("=== All Universal Portfolios Tuning Results ===")
+up_results_df
