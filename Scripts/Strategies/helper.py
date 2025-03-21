@@ -13,9 +13,14 @@ def project_to_simplex(v):
     theta = cssv[rho] / (rho + 1.0)
     return np.maximum(v - theta, 0)
 
-def calculate_l1_median(data):
-    def objective_function(mu):
-        return np.sum(np.linalg.norm(data - mu, axis=1))
-    initial_guess = np.mean(data, axis=0)
-    result = minimize(objective_function, initial_guess)
-    return result.x
+def calculate_l1_median(data, max_iter=100, tol=1e-5):
+    mu = np.mean(data, axis=0)  # Initial guess
+    for _ in range(max_iter):
+        distances = np.linalg.norm(data - mu, axis=1)
+        distances[distances < 1e-10] = 1e-10  # Avoid divide-by-zero
+        weights = 1.0 / distances[:, np.newaxis]
+        mu_new = np.sum(weights * data, axis=0) / np.sum(weights, axis=0)
+        if np.linalg.norm(mu_new - mu) < tol:
+            break
+        mu = mu_new
+    return mu

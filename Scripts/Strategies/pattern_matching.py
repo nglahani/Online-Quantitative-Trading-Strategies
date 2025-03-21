@@ -9,7 +9,7 @@ from scipy.optimize import minimize
 
 from Strategies.helper import *
 
-def histogram_based_selection(price_relative_vectors, w=5, bins=[(0,0.5),(0.5,1),(1,1.5)]):
+def histogram_based_selection(price_relative_vectors, w=4, bins=[(0,0.5),(0.5,1),(1,1.5)]):
     n = len(price_relative_vectors)
     if n < w:
         return []
@@ -25,7 +25,7 @@ def histogram_based_selection(price_relative_vectors, w=5, bins=[(0,0.5),(0.5,1)
             C.append(i + w)
     return C
 
-def kernel_based_selection(price_relative_vectors, w=5, threshold=0.2):
+def kernel_based_selection(price_relative_vectors, w=4, threshold=0.1):
     n = len(price_relative_vectors)
     if n < w:
         return []
@@ -39,7 +39,7 @@ def kernel_based_selection(price_relative_vectors, w=5, threshold=0.2):
             C.append(i)
     return C
 
-def nearest_neighbor_selection(price_relative_vectors, w=5, num_neighbors=3):
+def nearest_neighbor_selection(price_relative_vectors, w=4, num_neighbors=3):
     n = len(price_relative_vectors)
     if n < w:
         return []
@@ -53,7 +53,7 @@ def nearest_neighbor_selection(price_relative_vectors, w=5, num_neighbors=3):
     C = [idx for idx,_ in distances[:num_neighbors]]
     return C
 
-def correlation_based_selection(price_relative_vectors, w=5, rho=0.7):
+def correlation_based_selection(price_relative_vectors, w=4, rho=0.7):
     n = len(price_relative_vectors)
     if n < w:
         return []
@@ -99,7 +99,7 @@ def semi_log_optimal_portfolio(C, price_relative_vectors):
     result = minimize(objective, b_init, method='SLSQP', bounds=bounds, constraints=cons)
     return result.x
 
-def markowitz_portfolio(C, price_relative_vectors, lambda_=0.5):
+def markowitz_portfolio(C, price_relative_vectors, lambda_= 0.7):
     if not C:
         m = price_relative_vectors.shape[1]
         return np.ones(m)/m
@@ -116,7 +116,7 @@ def markowitz_portfolio(C, price_relative_vectors, lambda_=0.5):
     result = minimize(objective, b_init, method='SLSQP', bounds=bounds, constraints=cons)
     return result.x
 
-def pattern_matching_portfolio_master(b, price_relative_vectors, methods, w=5):
+def pattern_matching_portfolio_master(b, price_relative_vectors, methods, w=4):
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
     b_n[0] = b
