@@ -1,0 +1,67 @@
+algorithm,learning_rate,base_experts,final_wealth,exp_growth,sharpe
+online_gradient_update_meta,0.01,"['cwmr', 'follow_the_regularized_leader', 'pamr']",102.65798699381777,0.0015340851104549708,1.364828071212512
+online_gradient_update_meta,0.01,"['follow_the_regularized_leader', 'pamr']",100.62532294497812,0.0015274607304155894,1.3545312386909432
+online_gradient_update_meta,0.1,"['cwmr', 'follow_the_regularized_leader', 'pamr']",101.73714520958703,0.001531100523131831,1.3489565599301314
+online_gradient_update_meta,0.01,"['cwmr', 'follow_the_regularized_leader']",79.76686973494267,0.0014505161484006676,1.3461144769629532
+online_gradient_update_meta,0.1,"['follow_the_regularized_leader', 'pamr']",100.63915480531288,0.0015275062586016775,1.3441077324284585
+online_gradient_update_meta,0.2,"['cwmr', 'follow_the_regularized_leader', 'pamr']",100.74057465684498,0.0015278398955473496,1.3317205209800156
+online_gradient_update_meta,0.2,"['follow_the_regularized_leader', 'pamr']",100.53513493584158,0.0015271637190309622,1.3308695265175619
+online_gradient_update_meta,0.1,"['cwmr', 'follow_the_regularized_leader']",78.80560811372801,0.0014465002197043334,1.330258829954868
+online_gradient_update_meta,0.3,"['follow_the_regularized_leader', 'pamr']",100.36926708451314,0.001526616778953987,1.3166775059638516
+online_gradient_update_meta,0.3,"['cwmr', 'follow_the_regularized_leader', 'pamr']",99.82600798727006,0.0015248190627498203,1.3155437202856286
+online_gradient_update_meta,0.2,"['cwmr', 'follow_the_regularized_leader']",77.61842505837038,0.0014414722872887835,1.3098183675222097
+online_gradient_update_meta,0.3,"['cwmr', 'follow_the_regularized_leader']",76.39255177064005,0.0014361991392868288,1.2878840608256559
+online_gradient_update_meta,0.01,"['cwmr', 'follow_the_regularized_leader', 'pamr', 'anticor']",72.74839958339568,0.0014200089125392368,1.274426624229083
+online_gradient_update_meta,0.1,"['cwmr', 'follow_the_regularized_leader', 'pamr', 'anticor']",73.2327884558644,0.0014222071051346863,1.265855521733012
+online_gradient_update_meta,0.01,"['cwmr', 'pamr']",121.04774211536468,0.0015886667872521208,1.2632894506089234
+online_gradient_update_meta,0.1,"['cwmr', 'pamr']",120.83258549339472,0.0015880775079785644,1.2627552228952927
+online_gradient_update_meta,0.2,"['cwmr', 'pamr']",120.59148036452282,0.0015874159119092768,1.2621349383319744
+online_gradient_update_meta,0.3,"['cwmr', 'pamr']",120.34897991008283,0.001586749151429479,1.2614883419250151
+online_gradient_update_meta,1.0,"['cwmr', 'pamr']",118.67553759582913,0.0015821110282911346,1.2563970906019295
+online_gradient_update_meta,0.2,"['cwmr', 'follow_the_regularized_leader', 'pamr', 'anticor']",73.74944174233217,0.0014245357487895937,1.2563838766990663
+online_gradient_update_meta,2.0,"['cwmr', 'pamr']",116.66868278807709,0.0015764617908932412,1.2484801081343544
+online_gradient_update_meta,0.3,"['cwmr', 'follow_the_regularized_leader', 'pamr', 'anticor']",74.26051944167698,0.0014268232671844638,1.2472468879909433
+online_gradient_update_meta,1.0,"['cwmr', 'follow_the_regularized_leader', 'pamr']",96.87574802405022,0.001514882149447593,1.24604270594555
+online_gradient_update_meta,0.01,"['cwmr', 'follow_the_regularized_leader', 'anticor']",55.182656918192016,0.0013284692671916422,1.238974009520367
+online_gradient_update_meta,1.0,"['follow_the_regularized_leader', 'pamr']",101.18779294402582,0.0015293070972159878,1.2381413174175395
+online_gradient_update_meta,0.01,"['follow_the_regularized_leader', 'pamr', 'anticor']",63.99535966337064,0.0013775457354989085,1.2372451339301334
+online_gradient_update_meta,0.1,"['follow_the_regularized_leader', 'pamr', 'anticor']",64.90312774699935,0.0013822112672663034,1.2314181028159
+online_gradient_update_meta,0.1,"['cwmr', 'follow_the_regularized_leader', 'anticor']",55.185483896392704,0.001328486235776144,1.2298672800907375
+online_gradient_update_meta,0.2,"['follow_the_regularized_leader', 'pamr', 'anticor']",65.91896530395908,0.00138735547838342,1.2246288063016268
+online_gradient_update_meta,2.0,"['cwmr', 'follow_the_regularized_leader', 'pamr']",98.22501249685345,0.0015194636941607573,1.222149878615838
+online_gradient_update_meta,0.2,"['cwmr', 'follow_the_regularized_leader', 'anticor']",55.13314396473522,0.0013281719308303418,1.2185476082114077
+online_gradient_update_meta,0.3,"['follow_the_regularized_leader', 'pamr', 'anticor']",66.95023076806169,0.0013924973564103879,1.2177133659287498
+online_gradient_update_meta,2.0,"['follow_the_regularized_leader', 'pamr']",109.05748431760995,0.0015541156416940453,1.2148324830323802
+online_gradient_update_meta,2.0,"['cwmr', 'pamr', 'anticor']",95.45402685336362,0.0015099850074109565,1.2071381371025953
+online_gradient_update_meta,0.3,"['cwmr', 'follow_the_regularized_leader', 'anticor']",55.04125627124957,0.001327619416383,1.2063040032128836
+online_gradient_update_meta,1.0,"['cwmr', 'follow_the_regularized_leader', 'pamr', 'anticor']",78.4354523271315,0.001444940716527255,1.2041549249164838
+online_gradient_update_meta,1.0,"['cwmr', 'pamr', 'anticor']",86.82188014267649,0.0014785884946264002,1.1997820940086616
+online_gradient_update_meta,2.0,"['pamr', 'anticor']",105.17037113525694,0.0015420939441648676,1.1957641433475572
+online_gradient_update_meta,2.0,"['cwmr', 'follow_the_regularized_leader', 'pamr', 'anticor']",85.3765145517529,0.00147302784290323,1.1919010506622632
+online_gradient_update_meta,0.3,"['cwmr', 'pamr', 'anticor']",77.41475336802569,0.00144060197894055,1.1903736420744635
+online_gradient_update_meta,0.2,"['cwmr', 'pamr', 'anticor']",75.84449344110132,0.0014338142117096009,1.188262476905498
+online_gradient_update_meta,0.1,"['cwmr', 'pamr', 'anticor']",74.22256424688382,0.0014266539265672432,1.185799297457958
+online_gradient_update_meta,0.01,"['cwmr', 'pamr', 'anticor']",72.72091141632488,0.0014198837307116507,1.1832224993870497
+online_gradient_update_meta,1.0,"['follow_the_regularized_leader', 'pamr', 'anticor']",75.16338370814147,0.0014308261654844777,1.1801136521521916
+online_gradient_update_meta,2.0,"['follow_the_regularized_leader', 'pamr', 'anticor']",89.22061126710572,0.0014876157936107126,1.174924755824629
+online_gradient_update_meta,1.0,"['cwmr', 'follow_the_regularized_leader']",70.76391353229661,0.001410847689595582,1.17196255252885
+online_gradient_update_meta,1.0,"['pamr', 'anticor']",86.10699112196596,0.0014758498197539858,1.169747957009338
+online_gradient_update_meta,0.3,"['pamr', 'anticor']",68.69560436298474,0.0014010219324643103,1.1397357976231817
+online_gradient_update_meta,0.2,"['pamr', 'anticor']",66.16789393199188,0.0013886039613705465,1.1339992058497457
+online_gradient_update_meta,2.0,"['cwmr', 'follow_the_regularized_leader']",70.17401215424556,0.0014080748742162587,1.1299206984957098
+online_gradient_update_meta,0.01,"['follow_the_regularized_leader', 'anticor']",38.77016412541102,0.001211543883730845,1.1280445790590266
+online_gradient_update_meta,0.1,"['pamr', 'anticor']",63.678765500002775,0.001375902999455382,1.127823891824096
+online_gradient_update_meta,1.0,"['cwmr', 'follow_the_regularized_leader', 'anticor']",54.88079743365588,0.0013266523729078199,1.1272564096111743
+online_gradient_update_meta,0.1,"['follow_the_regularized_leader', 'anticor']",38.720900294635726,0.0012111227272438268,1.1229249262016006
+online_gradient_update_meta,0.01,"['pamr', 'anticor']",61.48548369061618,0.0013642931796622288,1.1218919432712802
+online_gradient_update_meta,0.2,"['follow_the_regularized_leader', 'anticor']",38.65863811396029,0.0012105896806543035,1.1170072186247926
+online_gradient_update_meta,0.3,"['follow_the_regularized_leader', 'anticor']",38.59122863134335,0.0012100115975880955,1.1109083894829188
+online_gradient_update_meta,0.1,"['cwmr', 'anticor']",49.36645086295655,0.0012915770325108442,1.0973484297099472
+online_gradient_update_meta,0.2,"['cwmr', 'anticor']",50.05800539716898,0.0012961849754774086,1.097048126711794
+online_gradient_update_meta,0.01,"['cwmr', 'anticor']",48.7241992669432,0.0012872394208471572,1.096930989608082
+online_gradient_update_meta,0.3,"['cwmr', 'anticor']",50.73495551015056,0.0013006343593322948,1.0961093124205923
+online_gradient_update_meta,2.0,"['cwmr', 'anticor']",63.36525180413346,0.0013742681789976605,1.091264041785452
+online_gradient_update_meta,2.0,"['cwmr', 'follow_the_regularized_leader', 'anticor']",58.13741665937501,0.0013457467575489451,1.0907605879468667
+online_gradient_update_meta,1.0,"['cwmr', 'anticor']",55.68311171023602,0.0013314597217837446,1.0861186807572658
+online_gradient_update_meta,1.0,"['follow_the_regularized_leader', 'anticor']",38.19536705843487,0.001206596299127051,1.0681381360586633
+online_gradient_update_meta,2.0,"['follow_the_regularized_leader', 'anticor']",38.57834019453146,0.0012099009553226245,1.025338586588395

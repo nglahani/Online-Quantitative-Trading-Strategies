@@ -1,0 +1,180 @@
+import pandas as pd
+import numpy as np
+import itertools
+import os
+import time
+from joblib import Parallel, delayed
+from tqdm import tqdm
+
+from utilities import *
+from Strategies.pattern_matching import (
+    histogram_based_selection, kernel_based_selection, nearest_neighbor_selection, correlation_based_selection,
+    log_optimal_portfolio, semi_log_optimal_portfolio, markowitz_portfolio, pattern_matching_portfolio_master
+)
+
+def evaluate_pattern_matching_combo(param_dict, b, price_relative_vectors_array):
+    try:
+        sample_selection = param_dict['sample_selection']
+        portfolio_optimization = param_dict['portfolio_optimization']
+        w = param_dict['w']
+        ss_threshold = param_dict.get('ss_threshold')
+        ss_num_neighbors = param_dict.get('ss_num_neighbors')
+        ss_rho = param_dict.get('ss_rho')
+        po_lambda = param_dict.get('po_lambda')
+
+        ss_params = {}
+        if sample_selection.__name__ == 'kernel_based_selection' and ss_threshold is not None:
+            ss_params['threshold'] = ss_threshold
+        elif sample_selection.__name__ == 'nearest_neighbor_selection' and ss_num_neighbors is not None:
+            ss_params['num_neighbors'] = ss_num_neighbors
+        elif sample_selection.__name__ == 'correlation_based_selection' and ss_rho is not None:
+            ss_params['rho'] = ss_rho
+
+        po_params = {}
+        if portfolio_optimization.__name__ == 'markowitz_portfolio' and po_lambda is not None:
+            po_params['lambda_'] = po_lambda
+
+        def sample_selection_wrapper(X, w):
+            return sample_selection(X, w, **ss_params)
+
+        def portfolio_optimization_wrapper(C, X):
+            return portfolio_optimization(C, X, **po_params)
+
+        methods = {
+            'sample_selection': sample_selection_wrapper,
+            'portfolio_optimization': portfolio_optimization_wrapper
+        }
+
+        combo_desc = f"{sample_selection.__name__} + {portfolio_optimization.__name__} | w={w}"
+        print(f"\n🔎 STARTING: {combo_desc}")
+        print(f"     - ss_threshold: {ss_threshold}")
+        print(f"     - ss_num_neighbors: {ss_num_neighbors}")
+        print(f"     - ss_rho: {ss_rho}")
+        print(f"     - po_lambda: {po_lambda}")
+
+        start_time = time.time()
+
+        b_n = pattern_matching_portfolio_master(b, price_relative_vectors_array, methods, w=w)
+        final_wealth = calculate_cumulative_wealth(b_n, price_relative_vectors_array)
+        exp_growth = calculate_exponential_growth_rate(final_wealth, len(price_relative_vectors_array))
+        cum_wealth = calculate_cumulative_wealth_over_time(b_n, price_relative_vectors_array)
+        daily_returns = compute_periodic_returns(cum_wealth)
+        sharpe = compute_sharpe_ratio(daily_returns)
+
+        runtime = time.time() - start_time
+        print(f"✅ FINISHED: {combo_desc} in {runtime:.2f} seconds")
+        print(f"     - Final Wealth: {final_wealth:.4f}")
+        print(f"     - Exp Growth: {exp_growth:.4f}")
+        print(f"     - Sharpe Ratio: {sharpe:.4f}")
+
+        return {
+            'sample_selection': sample_selection.__name__,
+            'portfolio_optimization': portfolio_optimization.__name__,
+            'w': w,
+            'final_wealth': final_wealth,
+            'exp_growth': exp_growth,
+            'sharpe': sharpe,
+            'ss_threshold': ss_threshold,
+            'ss_num_neighbors': ss_num_neighbors,
+            'ss_rho': ss_rho,
+            'po_lambda': po_lambda,
+            'runtime_seconds': runtime
+        }
+
+    except Exception as e:
+        print(f"❌ ERROR: {param_dict} | Exception: {str(e)}")
+        return {**param_dict, 'final_wealth': None, 'exp_growth': None, 'sharpe': None, 'runtime_seconds': 'error', 'error': str(e)}
+
+
+# === 🧠 Smart Filter: Valid Combos Only ===
+def generate_valid_combinations(grid):
+    valid_combinations = []
+
+    for sample_selection in grid['sample_selection']:
+        for portfolio_optimization in grid['portfolio_optimization']:
+            for w in grid['w']:
+                ss_name = sample_selection.__name__
+                po_name = portfolio_optimization.__name__
+
+                # Sample Selection Param Branching
+                if ss_name == 'kernel_based_selection':
+                    ss_param_list = [{'ss_threshold': t} for t in grid['ss_threshold']]
+                elif ss_name == 'nearest_neighbor_selection':
+                    ss_param_list = [{'ss_num_neighbors': k} for k in grid['ss_num_neighbors']]
+                elif ss_name == 'correlation_based_selection':
+                    ss_param_list = [{'ss_rho': r} for r in grid['ss_rho']]
+                else:
+                    ss_param_list = [{}]
+
+                # Portfolio Optimization Param Branching
+                if po_name == 'markowitz_portfolio':
+                    po_param_list = [{'po_lambda': l} for l in grid['po_lambda']]
+                else:
+                    po_param_list = [{}]
+
+                # Combine into full param sets
+                for ss_params in ss_param_list:
+                    for po_params in po_param_list:
+                        combo = {
+                            'sample_selection': sample_selection,
+                            'portfolio_optimization': portfolio_optimization,
+                            'w': w,
+                            'ss_threshold': ss_params.get('ss_threshold'),
+                            'ss_num_neighbors': ss_params.get('ss_num_neighbors'),
+                            'ss_rho': ss_params.get('ss_rho'),
+                            'po_lambda': po_params.get('po_lambda')
+                        }
+                        valid_combinations.append(combo)
+
+    return valid_combinations
+
+
+# === Grid Search Using Joblib ===
+def run_joblib_grid(grid, b, price_relative_vectors_array, n_jobs=4):
+    param_dicts = generate_valid_combinations(grid)
+    print(f"🔁 Starting joblib tuning with {len(param_dicts)} valid combinations on {n_jobs} workers")
+
+    results = Parallel(n_jobs=n_jobs)(
+        delayed(evaluate_pattern_matching_combo)(param_dict, b, price_relative_vectors_array)
+        for param_dict in tqdm(param_dicts, desc="Tuning Progress")
+    )
+
+    results_df = pd.DataFrame(results)
+    results_df.sort_values(by='sharpe', ascending=False, inplace=True)
+    best_result = results_df.iloc[0].to_dict()
+    return results_df, best_result
+
+
+# === Main ===
+if __name__ == '__main__':
+    price_relative_df = pd.read_csv("..\\Data\\Price Relative Vectors\\price_relative_vectors.csv", index_col=0)
+    price_relative_vectors_array = price_relative_df.values
+    b = initialize_portfolio(price_relative_df.shape[1])
+
+    pattern_grid = {
+    'sample_selection': [
+        histogram_based_selection,
+        kernel_based_selection
+    ],
+    'portfolio_optimization': [
+        semi_log_optimal_portfolio,
+        log_optimal_portfolio,
+        markowitz_portfolio
+    ],
+    'w': [3, 4, 5],
+    'ss_threshold': [0.1, 0.2, 0.3],  # only used by kernel
+    'po_lambda': [0.3, 0.5, 0.7]      # only used by markowitz
+}
+
+
+    n_jobs = max(1, os.cpu_count() - 2)
+    print(f"Detected {os.cpu_count()} logical cores. Using {n_jobs} workers.")
+
+    start = time.time()
+    results_df, best_result = run_joblib_grid(pattern_grid, b, price_relative_vectors_array, n_jobs=n_jobs)
+    results_df.to_csv("..\\Data\\Tuning Data\\final_pattern_matching_results.csv", index=False)
+
+    elapsed = time.time() - start
+    print(f"\n✅ Tuning complete in {elapsed/60:.2f} minutes.")
+    print("🔥 Best configuration found:")
+    print(best_result)
