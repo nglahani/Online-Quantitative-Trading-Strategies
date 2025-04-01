@@ -40,7 +40,7 @@ def evaluate_up(b, price_relative_vectors, num_portfolios, tau, freq=252, risk_f
         A dictionary containing performance metrics.
     """
     # Run Universal Portfolios strategy with given hyperparameters
-    b_n = universal_portfolios(price_relative_vectors, num_portfolios=num_portfolios, tau=tau)
+    b_n = universal_portfolios(b, price_relative_vectors, num_portfolios=num_portfolios, tau=tau)
     
     # Final wealth and exponential growth rate
     final_wealth = calculate_cumulative_wealth(b_n, price_relative_vectors)

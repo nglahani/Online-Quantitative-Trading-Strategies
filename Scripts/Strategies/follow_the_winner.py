@@ -10,7 +10,7 @@ from scipy.optimize import minimize
 from Strategies.helper import *
 
 # Strategy 4: Universal Portfolios (Approximation)
-def universal_portfolios(price_relative_vectors, num_portfolios=3, tau=.4):
+def universal_portfolios(b, price_relative_vectors, num_portfolios=3, tau=.4):
     """
     Cover's Universal Portfolios, approximated by sampling 'num_portfolios' random points
     on the simplex. We track the wealth of each sampled portfolio over time and then 
