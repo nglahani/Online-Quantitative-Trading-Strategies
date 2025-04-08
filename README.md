@@ -6,7 +6,7 @@ A comprehensive Python-based framework for evaluating and comparing online portf
 
 This project implements a unified trading infrastructure for online portfolio selection. The framework covers the entire pipeline, including:
 - **Data Processing:** Extracting and preparing historical price data from CSV files to compute price-relative vectors with Price_Relative_Vector_Creation.ipynb
-- **Algorithm Implementation:** Multiple algorithm families such as Follow-the-Winner (e.g., Exponential Gradient, Follow-the-Leader, Follow-the-Regularized-Leader), Follow-the-Loser (e.g., Anticorrelation, PAMR, CWMR, OLMAR, RMR), Pattern-Matching approaches, and Meta-Learning ensembles in the [Strategies](Scripts/Strategies/)folder
+- **Algorithm Implementation:** Multiple algorithm families such as Follow-the-Winner (e.g., Exponential Gradient, Follow-the-Leader, Follow-the-Regularized-Leader), Follow-the-Loser (e.g., Anticorrelation, PAMR, CWMR, OLMAR, RMR), Pattern-Matching approaches, and Meta-Learning ensembles in the [Strategies](Scripts/Strategies/) folder
 - **Hyperparameter Tuning:** Automated grid search with parallel processing is employed to efficiently explore various parameter combinations and fine-tune the strategies, ensuring optimal performance based on metrics such as cumulative wealth, exponential growth rate, and the Sharpe ratio. Each algorithm has it's own associated hyperparameter tuning scripts in the [Archived Tuners](Scripts/Archived_Tuners/) folder. 
 - **Performance Evaluation:** Tools to assess performance metrics among algorithm types including cumulative wealth, exponential growth rate, and the Sharpe ratio in in the [Strategy_Comparisons](Scripts/Strategy_Comparisons/) folder
 
