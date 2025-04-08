@@ -5,10 +5,10 @@ A comprehensive Python-based framework for evaluating and comparing online portf
 ## Overview
 
 This project implements a unified trading infrastructure for online portfolio selection. The framework covers the entire pipeline, including:
-- **Data Processing:** Extracting and preparing historical price data from CSV files to compute price-relative vectors.
-- **Portfolio Initialization and Management:** Functions for uniform portfolio allocation and dynamic rebalancing.
-- **Algorithm Implementation:** Multiple algorithm families such as Follow-the-Winner (e.g., Exponential Gradient, Follow-the-Leader, Follow-the-Regularized-Leader), Follow-the-Loser (e.g., Anticorrelation, PAMR, CWMR, OLMAR, RMR), Pattern-Matching approaches, and Meta-Learning ensembles.
-- **Performance Evaluation:** Tools to assess performance metrics including cumulative wealth, exponential growth rate, and the Sharpe ratio, with extensive hyperparameter tuning via grid search.
+- **Data Processing:** Extracting and preparing historical price data from CSV files to compute price-relative vectors with Price_Relative_Vector_Creation.ipynb
+- **Algorithm Implementation:** Multiple algorithm families such as Follow-the-Winner (e.g., Exponential Gradient, Follow-the-Leader, Follow-the-Regularized-Leader), Follow-the-Loser (e.g., Anticorrelation, PAMR, CWMR, OLMAR, RMR), Pattern-Matching approaches, and Meta-Learning ensembles in the [Strategies](Scripts/Strategies/)folder
+- **Hyperparameter Tuning:** Automated grid search with parallel processing is employed to efficiently explore various parameter combinations and fine-tune the strategies, ensuring optimal performance based on metrics such as cumulative wealth, exponential growth rate, and the Sharpe ratio. Each algorithm has it's own associated hyperparameter tuning scripts in the [Archived Tuners](Scripts/Archived_Tuners/) folder. 
+- **Performance Evaluation:** Tools to assess performance metrics among algorithm types including cumulative wealth, exponential growth rate, and the Sharpe ratio in in the [Strategy_Comparisons](Scripts/Strategy_Comparisons/) folder
 
 For a detailed discussion of the methodologies, experiments, and empirical results, please refer to the research paper available in the [Docs](Docs/) folder.
 
@@ -51,7 +51,7 @@ For a detailed discussion of the methodologies, experiments, and empirical resul
 
 ## Installation and Dependencies
 
-This project requires Python 3.x. The core dependencies are listed in the `requirements.txt` file located in the Scripts folder. To install the necessary packages, run:
+This project requires Python 3.13. The core dependencies are listed in the `requirements.txt` file located in the Scripts folder. To install the necessary packages, run:
 
 ```bash
 pip install -r Scripts/requirements.txt
@@ -63,14 +63,15 @@ pip install -r Scripts/requirements.txt
 - pandas
 - scipy
 - joblib
-- matplotlib (for charting in notebooks)
+- matplotlib\
+- seaborn
 
 If additional dependencies are needed, please update the `requirements.txt` accordingly.
 
 ## Usage
 
 1. **Data Preparation:**  
-   Ensure that the Data folder contains the expected CSV files for price data. The script `utilities.py` and the notebook `Price_Relative_Vector_Creation.ipynb` handle the extraction and preprocessing of the historical price data.
+   Ensure that the Data folder contains the expected CSV files for price data. These can downloaded in the provided structure from QuantQuote Minute Data. The script `utilities.py` and the notebook `Price_Relative_Vector_Creation.ipynb` handle the extraction and preprocessing of the historical price data.
 
 2. **Running the Notebooks:**  
    Use Jupyter Notebook or JupyterLab to open and run notebooks such as:
@@ -80,7 +81,7 @@ If additional dependencies are needed, please update the `requirements.txt` acco
    These notebooks provide step-by-step details on how each strategy is executed and compared.
 
 3. **Evaluating Performance:**  
-   The framework computes several performance metrics for each strategy including cumulative wealth, exponential growth rate, and the Sharpe ratio. You can customize these evaluations by modifying the parameters in the notebooks and utility functions.
+   The framework computes three performance metrics for each strategy including cumulative wealth, exponential growth rate, and the Sharpe ratio. You can customize these evaluations by modifying the parameters in the notebooks and utility functions.
 
 ## Documentation and Research Paper
 
