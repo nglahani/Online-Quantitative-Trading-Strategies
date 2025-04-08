@@ -38,7 +38,7 @@ For a detailed discussion of the methodologies, experiments, and empirical resul
 ├── LICENSE
 ├── PROJECT_STRUCTURE.txt              # Detailed listing of the repository structure
 └── README.md                          # This file
-
+'''
 
 ```markdown
 ## Features
@@ -53,6 +53,7 @@ For a detailed discussion of the methodologies, experiments, and empirical resul
 ## Installation and Dependencies
 
 This project requires Python 3.x. The core dependencies are listed in the `requirements.txt` file located in the Scripts folder. To install the necessary packages, run:
+
 
 ```bash
 pip install -r Scripts/requirements.txt
