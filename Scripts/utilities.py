@@ -187,3 +187,24 @@ def compute_sharpe_ratio(returns, freq=252, risk_free_rate=0.05):
     # Annualize the Sharpe ratio
     sharpe = (mean_excess / std_excess) * np.sqrt(freq)
     return sharpe
+
+def calculate_maximum_drawdown(cumulative_wealth):
+    """
+    Calculate the maximum drawdown for a given cumulative wealth series.
+    
+    :param cumulative_wealth: A NumPy array or pandas Series of cumulative wealth values
+    :return: Maximum drawdown as a percentage (a negative value)
+    """
+    # Convert to numpy array if it's a pandas Series
+    wealth = np.array(cumulative_wealth)
+    
+    # Calculate the running maximum
+    running_max = np.maximum.accumulate(wealth)
+    
+    # Calculate drawdown percentage at each point
+    drawdown = (wealth - running_max) / running_max
+    
+    # Find the maximum drawdown (minimum of the drawdown series)
+    max_drawdown = np.min(drawdown)
+    
+    return max_drawdown

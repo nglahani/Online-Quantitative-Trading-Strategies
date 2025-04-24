@@ -1,0 +1,155 @@
+import pandas as pd
+import numpy as np
+import itertools
+import os
+import time
+from joblib import Parallel, delayed
+from tqdm import tqdm
+
+# Utility Function Imports (only import those needed)
+from utilities import *
+
+# Algorithm Imports
+from Strategies.benchmarks import *
+from Strategies.follow_the_loser import *
+from Strategies.follow_the_winner import *
+from Strategies.pattern_matching import *
+from Strategies.meta_learning import *
+
+# -------------------------------
+# PART 1: Parameter Tuning Setup
+# -------------------------------
+price_relative_df = pd.read_csv("..\\Data\\Price Relative Vectors\\price_relative_vectors.csv", index_col=0)
+b = initialize_portfolio(price_relative_df.shape[1])
+price_relative_vectors_array = price_relative_df.values
+dates = price_relative_df.index
+
+# -------------------------------
+# Evaluation Function for Follow_The_Leading_History Strategy
+# -------------------------------
+def evaluate_follow_the_leading_history(b, price_relative_vectors, eta, learning_rate, drop_threshold):
+    """
+    Runs the follow_the_leading_history strategy with the given hyperparameters and returns performance metrics.
+    
+    Parameters:
+        b: Initial portfolio (numpy array).
+        price_relative_vectors: numpy array of price relative vectors (shape: [T, N]).
+        eta: Hyperparameter controlling the step size in the ONS update.
+        learning_rate: Learning rate for the meta-weighted majority update.
+        drop_threshold: Threshold below which experts are dropped.
+        
+    Returns:
+        A dictionary containing performance metrics.
+    """
+    # Run the follow_the_leading_history strategy with the provided hyperparameters
+    b_n = follow_the_leading_history(b, price_relative_vectors, eta=eta, learning_rate=learning_rate, drop_threshold=drop_threshold)
+    
+    # Calculate performance metrics
+    final_wealth = calculate_cumulative_wealth(b_n, price_relative_vectors)
+    n_periods = len(price_relative_vectors)
+    exp_growth = calculate_exponential_growth_rate(final_wealth, n_periods)
+    cum_wealth = calculate_cumulative_wealth_over_time(b_n, price_relative_vectors)
+    daily_returns = compute_periodic_returns(cum_wealth)
+    sharpe = compute_sharpe_ratio(daily_returns)
+    
+    return {
+        'algorithm': 'follow_the_leading_history',
+        'eta': eta,
+        'learning_rate': learning_rate,
+        'drop_threshold': drop_threshold,
+        'final_wealth': final_wealth,
+        'exp_growth': exp_growth,
+        'sharpe': sharpe
+    }
+
+# -------------------------------
+# Wrapper Function for Joblib Evaluation (for follow_the_leading_history)
+# -------------------------------
+def evaluate_follow_the_leading_history_combo(param_dict, b, price_relative_vectors_array):
+    """
+    Wrapper that extracts hyperparameters from the combination dictionary and calls evaluate_follow_the_leading_history.
+    """
+    try:
+        eta = param_dict['eta']
+        learning_rate = param_dict['learning_rate']
+        drop_threshold = param_dict['drop_threshold']
+        result = evaluate_follow_the_leading_history(b, price_relative_vectors_array, eta, learning_rate, drop_threshold)
+        # Ensure grid parameters are recorded
+        result['eta'] = eta
+        result['learning_rate'] = learning_rate
+        result['drop_threshold'] = drop_threshold
+        return result
+    except Exception as e:
+        print(f"❌ ERROR: {param_dict} | Exception: {str(e)}")
+        return {
+            'eta': param_dict.get('eta'),
+            'learning_rate': param_dict.get('learning_rate'),
+            'drop_threshold': param_dict.get('drop_threshold'),
+            'final_wealth': None,
+            'exp_growth': None,
+            'sharpe': None,
+            'error': str(e)
+        }
+
+# -------------------------------
+# Generate Valid Parameter Combinations (for follow_the_leading_history)
+# -------------------------------
+def generate_valid_combinations(grid):
+    """
+    Generates a list of parameter dictionaries from the grid for follow_the_leading_history.
+    """
+    valid_combinations = []
+    for eta in grid['eta']:
+        for lr in grid['learning_rate']:
+            for dt in grid['drop_threshold']:
+                valid_combinations.append({
+                    'eta': eta,
+                    'learning_rate': lr,
+                    'drop_threshold': dt
+                })
+    return valid_combinations
+
+# -------------------------------
+# Joblib Grid Search for follow_the_leading_history
+# -------------------------------
+def run_joblib_grid_follow_the_leading_history(grid, b, price_relative_vectors_array, n_jobs=4):
+    param_dicts = generate_valid_combinations(grid)
+    print(f"🔁 Starting joblib tuning for follow_the_leading_history with {len(param_dicts)} combinations on {n_jobs} workers")
+    
+    results = Parallel(n_jobs=n_jobs)(
+        delayed(evaluate_follow_the_leading_history_combo)(param_dict, b, price_relative_vectors_array)
+        for param_dict in tqdm(param_dicts, desc="Tuning Progress")
+    )
+    
+    results_df = pd.DataFrame(results)
+    results_df.sort_values(by='sharpe', ascending=False, inplace=True)
+    best_result = results_df.iloc[0].to_dict()
+    return results_df, best_result
+
+# -------------------------------
+# Define the grid for follow_the_leading_history tuning
+# -------------------------------
+
+fts_grid = {
+    'eta': [0.3, .4, .5, .6, .7],
+    'learning_rate': [0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0],
+    'drop_threshold': [0.5, .6, .7, .8]
+}
+
+# -------------------------------
+# Run the Parallelized Tuning for follow_the_leading_history Strategy
+# -------------------------------
+if __name__ == '__main__':
+    n_jobs = max(1, os.cpu_count() - 2)
+    print(f"Detected {os.cpu_count()} logical cores. Using {n_jobs} workers for parallel tuning.")
+    
+    start = time.time()
+    fts_results_df, best_fts = run_joblib_grid_follow_the_leading_history(fts_grid, b, price_relative_vectors_array, n_jobs=n_jobs)
+    
+    # Save results for future reference
+    fts_results_df.to_csv("..\\Data\\Tuning Data\\follow_the_leading_history_tuning_results.csv", index=False)
+    
+    elapsed = time.time() - start
+    print(f"\n✅ Tuning complete in {elapsed/60:.2f} minutes.")
+    print("🔥 Best follow_the_leading_history configuration found:")
+    print(best_fts)
