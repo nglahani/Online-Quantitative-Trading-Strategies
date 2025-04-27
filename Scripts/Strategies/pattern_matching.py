@@ -116,16 +116,47 @@ def markowitz_portfolio(C, price_relative_vectors, lambda_= 0.7):
     result = minimize(objective, b_init, method='SLSQP', bounds=bounds, constraints=cons)
     return result.x
 
-def pattern_matching_portfolio_master(b, price_relative_vectors, methods, w=4):
+def pattern_matching_portfolio_master(b, price_relative_vectors, methods=None, w=4, threshold=0.2, lambda_=0.5, num_neighbors=3, rho=0.7):
+    """
+    Master function for pattern matching portfolio strategies.
+    """
+        
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
     b_n[0] = b
-
+    
     for t in range(1, T):
-        if t >= w:
-            C_t = methods['sample_selection'](price_relative_vectors[:t], w=w)
-        else:
-            C_t = []
-        b_t = methods['portfolio_optimization'](C_t, price_relative_vectors[:t])
-        b_n[t] = b_t
+        try:
+            if t >= w:
+                # Extract method-specific parameters
+                ss_params = {}
+                if methods['sample_selection'].__name__ == 'kernel_based_selection':
+                    ss_params['threshold'] = threshold
+                elif methods['sample_selection'].__name__ == 'nearest_neighbor_selection':
+                    ss_params['num_neighbors'] = num_neighbors
+                elif methods['sample_selection'].__name__ == 'correlation_based_selection':
+                    ss_params['rho'] = rho
+                
+                C_t = methods['sample_selection'](price_relative_vectors[:t], w=w, **ss_params)
+            else:
+                C_t = []
+            
+            # Extract portfolio optimization parameters
+            po_params = {}
+            if methods['portfolio_optimization'].__name__ == 'markowitz_portfolio':
+                po_params['lambda_'] = lambda_
+            
+            b_t = methods['portfolio_optimization'](C_t, price_relative_vectors[:t], **po_params)
+            
+            # Validate portfolio weights
+            if np.any(np.isnan(b_t)):
+                b_t = np.ones(N) / N
+            elif not np.isclose(np.sum(b_t), 1.0, rtol=1e-5):
+                b_t = b_t / np.sum(b_t)
+            
+            b_n[t] = b_t
+            
+        except Exception as e:
+            b_n[t] = np.ones(N) / N  # Fallback to equal weights
+    
     return b_n

@@ -66,12 +66,18 @@ def fast_universalization(b, price_relative_vectors, learning_rate=0.1, base_exp
     return b_n
 
 def online_gradient_update_meta(b, price_relative_vectors, learning_rate=0.01, base_experts=[cwmr, follow_the_regularized_leader, pamr]):
+    from joblib import Parallel, delayed
+    
     T, N = price_relative_vectors.shape
     M = len(base_experts)
     expert_weights = np.ones(M) / M
     b_n = np.zeros((T, N))
     b_n[0] = b.copy()
     expert_portfolios = np.array([b.copy() for _ in range(M)])
+    
+    def update_expert_portfolio(expert, portfolio, data):
+        full_b = expert(portfolio, data)
+        return full_b[-1]
     
     for t in range(T):
         meta_portfolio = np.dot(expert_weights, expert_portfolios)
@@ -87,17 +93,23 @@ def online_gradient_update_meta(b, price_relative_vectors, learning_rate=0.01, b
             expert_weights = expert_weights * np.exp(-learning_rate * losses)
             expert_weights /= np.sum(expert_weights)
             
-            # Update each expert's portfolio using its own strategy
-            for i, expert in enumerate(base_experts):
-                full_b = expert(expert_portfolios[i], price_relative_vectors[:t+1])
-                expert_portfolios[i] = full_b[-1]
+            # Parallel update of expert portfolios
+            updated_portfolios = Parallel(n_jobs=-1)(
+                delayed(update_expert_portfolio)(
+                    expert, 
+                    expert_portfolios[i], 
+                    price_relative_vectors[:t+1]
+                ) for i, expert in enumerate(base_experts)
+            )
+            expert_portfolios = np.array(updated_portfolios)
     
     return b_n
 
 
 
-def online_newton_update_meta(b, price_relative_vectors, learning_rate=0.01, 
-                              base_experts=[cwmr, follow_the_regularized_leader, pamr]):
+def online_newton_update_meta(b, price_relative_vectors, learning_rate=0.01, base_experts=[cwmr, follow_the_regularized_leader, pamr]):
+    from joblib import Parallel, delayed
+    
     # Set delta as a constant (no longer a tuneable parameter)
     delta = 1e-2
 
@@ -109,6 +121,10 @@ def online_newton_update_meta(b, price_relative_vectors, learning_rate=0.01,
     expert_portfolios = np.array([b.copy() for _ in range(M)])
     # Initialize A_inv as the inverse of delta * I
     A_inv = np.eye(M) / delta
+    
+    def update_expert_portfolio(expert, portfolio, data):
+        full_b = expert(portfolio, data)
+        return full_b[-1]
 
     for t in range(T):
         aggregated_portfolio = np.dot(w_experts, expert_portfolios)
@@ -129,10 +145,15 @@ def online_newton_update_meta(b, price_relative_vectors, learning_rate=0.01,
             w_next = w_experts - (1.0 / learning_rate) * (A_inv @ losses)
             w_experts = project_to_simplex(w_next)
 
-            # Update each expert's portfolio using its own strategy
-            for i, expert in enumerate(base_experts):
-                full_b = expert(expert_portfolios[i], price_relative_vectors[:t+1])
-                expert_portfolios[i] = full_b[-1]
+            # Parallel update of expert portfolios
+            updated_portfolios = Parallel(n_jobs=-1)(
+                delayed(update_expert_portfolio)(
+                    expert, 
+                    expert_portfolios[i], 
+                    price_relative_vectors[:t+1]
+                ) for i, expert in enumerate(base_experts)
+            )
+            expert_portfolios = np.array(updated_portfolios)
 
     return b_n
 
@@ -180,13 +201,20 @@ def meta_weighted_majority(expert_portfolios, meta_weights, x_t, learning_rate=0
 def follow_the_leading_history(b_init, price_relative_vectors, eta=0.4, learning_rate=0.05, drop_threshold=0.5):
     """
     Spawns a new ONS expert at each time step t, uses Weighted Majority to 
-    combine them, and drops underperforming experts.
+    combine them, and drops underperforming experts. Uses parallel processing
+    for expert updates.
     """
+    from joblib import Parallel, delayed
+    
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
 
     experts = []
     meta_weights = np.array([])
+
+    def update_expert(expert, t, data, eta):
+        expert.update(t, data, eta=eta)
+        return expert
 
     for t in range(T):
         # Spawn a new expert at time t
@@ -210,8 +238,18 @@ def follow_the_leading_history(b_init, price_relative_vectors, eta=0.4, learning
         if t < T - 1:
             x_t = price_relative_vectors[t]
             meta_weights = meta_weighted_majority(expert_portfolios, meta_weights, x_t, learning_rate)
-            for i, expert in enumerate(experts):
-                expert.update(t, price_relative_vectors, eta=eta)
+            
+            # Parallel update of experts
+            updated_experts = Parallel(n_jobs=-1)(
+                delayed(update_expert)(
+                    expert, 
+                    t, 
+                    price_relative_vectors, 
+                    eta
+                ) for expert in experts
+            )
+            experts = updated_experts
+            
             # Drop experts below threshold
             active_idxs = np.where(meta_weights >= drop_threshold)[0]
             if len(active_idxs) == 0 and len(meta_weights) > 0:

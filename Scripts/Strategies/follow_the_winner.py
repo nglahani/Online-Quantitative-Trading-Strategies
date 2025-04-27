@@ -69,6 +69,10 @@ def exponential_gradient(b, price_relative_vectors, learning_rate=0.1, smoothing
     Returns:
         b_n: 2D numpy array where each row is the portfolio vector at a given time step.
     """
+    # Debug output to verify parameter values
+    # print(f"[DEBUG] exponential_gradient called with learning_rate={learning_rate}, smoothing={smoothing}")
+    # print(f"[DEBUG] price_relative_vectors shape: {price_relative_vectors.shape}")
+    
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
     b_n[0] = b

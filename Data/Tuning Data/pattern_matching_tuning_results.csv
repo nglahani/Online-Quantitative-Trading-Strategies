@@ -1,0 +1,13 @@
+methods,w,lambda_,avg_val_final_wealth,avg_val_sharpe,avg_val_max_drawdown,threshold,num_neighbors,rho
+"{'sample_selection': 'kernel_based_selection', 'portfolio_optimization': 'markowitz_portfolio'}",5,0.5,2.229245323238184,1.0007989946737466,-0.33511296253065437,0.1,,
+"{'sample_selection': 'nearest_neighbor_selection', 'portfolio_optimization': 'markowitz_portfolio'}",3,0.5,3.0603841635899824,0.9155733379802772,-0.5833888693463033,,5.0,
+"{'sample_selection': 'kernel_based_selection', 'portfolio_optimization': 'markowitz_portfolio'}",3,0.5,1.9259334083306126,0.9058768783950946,-0.26889875637794924,0.1,,
+"{'sample_selection': 'histogram_based_selection', 'portfolio_optimization': 'log_optimal_portfolio'}",5,,3.8378390426778495,0.8109779074757478,-0.5461037019621515,,,
+"{'sample_selection': 'histogram_based_selection', 'portfolio_optimization': 'markowitz_portfolio'}",5,0.5,3.708673113280586,0.8077841760105795,-0.538217065910916,,,
+"{'sample_selection': 'histogram_based_selection', 'portfolio_optimization': 'log_optimal_portfolio'}",3,,4.654074827745783,0.710504016200442,-0.5834560458718789,,,
+"{'sample_selection': 'histogram_based_selection', 'portfolio_optimization': 'markowitz_portfolio'}",3,0.5,4.112549246116233,0.7022000406998741,-0.5826771909785263,,,
+"{'sample_selection': 'kernel_based_selection', 'portfolio_optimization': 'markowitz_portfolio'}",3,0.5,2.639365582709062,0.6971311922832116,-0.5299739926146,0.3,,
+"{'sample_selection': 'kernel_based_selection', 'portfolio_optimization': 'markowitz_portfolio'}",5,0.5,1.6961279056496328,0.5066929305784451,-0.6990726406685897,0.3,,
+"{'sample_selection': 'correlation_based_selection', 'portfolio_optimization': 'markowitz_portfolio'}",5,0.5,0.9890342931658088,0.32347581005958853,-0.7787770238700725,,,0.7
+"{'sample_selection': 'nearest_neighbor_selection', 'portfolio_optimization': 'markowitz_portfolio'}",5,0.5,1.37868087702343,0.24635667297457467,-0.7265006221219105,,5.0,
+"{'sample_selection': 'correlation_based_selection', 'portfolio_optimization': 'markowitz_portfolio'}",3,0.5,1.6757259194852807,0.1712604065510372,-0.6302839118387908,,,0.7
