@@ -152,13 +152,16 @@ def compute_periodic_returns(cumulative_wealth):
     If W_t is the wealth at time t, then the return for time t is (W_t / W_{t-1} - 1).
     The first return is NaN or 0 by convention, so we drop it.
     """
-    # shift(1) to get the previous wealth
-    # daily_return_t = (W_t / W_{t-1}) - 1
-    # We skip the very first period since there's no "previous" wealth in the array.
+    if len(cumulative_wealth) < 2:
+        return np.array([])
+        
+    w = pd.Series(cumulative_wealth)
+    # Add small constant to prevent division by zero
+    w = w.clip(lower=1e-10)
     
-    w = pd.Series(cumulative_wealth)  # convert to pandas for convenience
-    returns = w.pct_change().dropna()  # drop the first NaN
-    return returns.values  # convert back to a NumPy array
+    # Calculate returns with explicit fill_method=None to address deprecation warning
+    returns = w.pct_change(fill_method=None).dropna()
+    return returns.values
 
 def compute_sharpe_ratio(returns, freq=252, risk_free_rate=0.05):
     """
@@ -169,24 +172,33 @@ def compute_sharpe_ratio(returns, freq=252, risk_free_rate=0.05):
     :param risk_free_rate: Risk-free return for one *year*. If 0, then no adjustment.
     :return: Sharpe ratio (float)
     """
+    if len(returns) == 0:
+        return np.nan
+        
     # Convert annual risk-free rate to a single-period risk-free return
-    # For daily: (1 + Rf_annual)^(1/252) - 1
     rf_periodic = (1 + risk_free_rate)**(1/freq) - 1
+    
+    # Replace any infinite values with NaN
+    returns = np.where(np.isfinite(returns), returns, np.nan)
     
     # Excess returns over each period
     excess_returns = returns - rf_periodic
-
-    # Handle edge-cases (e.g., zero or near-zero standard deviation)
-    std_excess = excess_returns.std()
-    if std_excess < 1e-14:
+    
+    # Handle edge-cases
+    if len(excess_returns) == 0 or np.all(np.isnan(excess_returns)):
         return np.nan
     
-    # Mean of excess returns
-    mean_excess = excess_returns.mean()
+    # Calculate std with ddof=1 for sample standard deviation
+    std_excess = np.nanstd(excess_returns, ddof=1)
+    if std_excess < 1e-10:
+        return np.nan
+    
+    # Mean of excess returns (excluding NaN values)
+    mean_excess = np.nanmean(excess_returns)
     
     # Annualize the Sharpe ratio
     sharpe = (mean_excess / std_excess) * np.sqrt(freq)
-    return sharpe
+    return sharpe if np.isfinite(sharpe) else np.nan
 
 def calculate_maximum_drawdown(cumulative_wealth):
     """
@@ -198,13 +210,20 @@ def calculate_maximum_drawdown(cumulative_wealth):
     # Convert to numpy array if it's a pandas Series
     wealth = np.array(cumulative_wealth)
     
-    # Calculate the running maximum
+    # Handle edge cases
+    if len(wealth) == 0 or np.any(np.isnan(wealth)):
+        return np.nan
+        
+    # Calculate the running maximum with numeric stability check
     running_max = np.maximum.accumulate(wealth)
+    running_max = np.maximum(running_max, 1e-10)  # Prevent division by zero
     
-    # Calculate drawdown percentage at each point
-    drawdown = (wealth - running_max) / running_max
+    # Calculate drawdown percentage at each point with numeric stability
+    drawdown = np.where(running_max > 0, 
+                       (wealth - running_max) / running_max,
+                       0.0)  # Fallback for zero running max
     
-    # Find the maximum drawdown (minimum of the drawdown series)
-    max_drawdown = np.min(drawdown)
+    # Find the maximum drawdown
+    max_drawdown = np.min(drawdown) if not np.all(np.isnan(drawdown)) else np.nan
     
     return max_drawdown

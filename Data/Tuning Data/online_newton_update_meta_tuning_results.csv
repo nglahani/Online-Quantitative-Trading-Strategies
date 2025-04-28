@@ -1,3 +1,17 @@
 learning_rate,base_experts,avg_val_final_wealth,avg_val_sharpe,avg_val_max_drawdown
-0.01,"['cwmr', 'pamr', 'follow_the_regularized_leader']",2.8510068635399852,1.2009216124984008,-0.33370557356431635
-0.1,"['cwmr', 'pamr', 'follow_the_regularized_leader']",2.807426745246771,1.1674557903353686,-0.35543931371555937
+0.015,"['cwmr', 'pamr', 'rmr', 'olmar']",2.9581783544104137,1.456435961882205,-0.23459718941252033
+0.02,"['cwmr', 'pamr', 'rmr', 'olmar']",2.9582856247688802,1.4563472964432216,-0.2317800967320384
+0.01,"['cwmr', 'pamr', 'rmr', 'olmar']",2.957279032343873,1.4523167270931405,-0.23664022751699218
+0.005,"['cwmr', 'pamr', 'rmr', 'olmar']",2.9799473257270286,1.4513433707957424,-0.23431241628142335
+0.02,"['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.6500074141812737,1.2299313699307663,-0.30507184577608804
+0.005,"['cwmr', 'pamr', 'follow_the_regularized_leader']",2.887338544156844,1.208466548811504,-0.3298274344702532
+0.005,"['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.64795254564316,1.2063957195386794,-0.30218265759900775
+0.01,"['cwmr', 'pamr', 'follow_the_regularized_leader']",2.851006863519119,1.1999237547261117,-0.3337055735655648
+0.015,"['cwmr', 'pamr', 'follow_the_regularized_leader']",2.8329530076362266,1.1963338082331993,-0.3356367114372704
+0.02,"['cwmr', 'pamr', 'follow_the_regularized_leader']",2.828663801034659,1.195876544024346,-0.3368618410389802
+0.015,"['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.4769037692453204,1.100988610731772,-0.3152666351784826
+0.01,"['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.355827574989908,1.077569951072847,-0.3127711805962462
+0.015,"['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",1.8010206482356754,0.8910152290167257,-0.3535441444065742
+0.005,"['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",1.6804671910416702,0.8346686905799089,-0.35749854854659946
+0.01,"['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",1.6048754636157523,0.7897975006655068,-0.35117369613211324
+0.02,"['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",1.5438766805304611,0.722713337251817,-0.35826842159025535

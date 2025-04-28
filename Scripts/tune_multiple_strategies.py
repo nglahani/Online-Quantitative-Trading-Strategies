@@ -34,37 +34,6 @@ def tune_strategy(strategy_name, price_relative_df, use_walk_forward=False, outp
                   val_windows=5, val_size=0.2, parallel=True, n_jobs=None):
     """
     Tune a single strategy and return the best parameters.
-    
-    Parameters:
-    -----------
-    strategy_name : str
-        Name of the strategy to tune
-        
-    price_relative_df : pandas.DataFrame
-        DataFrame containing price relative vectors
-        
-    use_walk_forward : bool, optional
-        Whether to use walk-forward validation
-        
-    output_dir : str, optional
-        Directory to save tuning results
-        
-    val_windows : int, optional
-        Number of validation windows for walk-forward validation
-        
-    val_size : float, optional
-        Size of each validation window as a fraction of the data
-        
-    parallel : bool, optional
-        Whether to use parallel processing for tuning
-        
-    n_jobs : int, optional
-        Number of parallel jobs for tuning. If None, uses CPU count - 2
-        
-    Returns:
-    --------
-    dict
-        Dictionary containing best parameters and performance metrics
     """
     # Get strategy function
     strategy_func = get_strategy_func(strategy_name)
@@ -72,7 +41,7 @@ def tune_strategy(strategy_name, price_relative_df, use_walk_forward=False, outp
     # Get default parameter grid
     param_grid = get_default_param_grid(strategy_name)
 
-    # Create tuner without the invalid output_path parameter
+    # Create tuner
     tuner = StrategyFactory.create_tuner(
         strategy_name,
         strategy_func,
@@ -92,7 +61,10 @@ def tune_strategy(strategy_name, price_relative_df, use_walk_forward=False, outp
     tuner.set_param_grid(param_grid)
     
     # Run tuning
-    print(f"\nRunning hyperparameter tuning for {strategy_name}...")
+    print(f"\n{'='*80}")
+    print(f"Running hyperparameter tuning for strategy: {strategy_name}")
+    print(f"{'='*80}")
+    
     start_time = time.time()
     results_df, best_params = tuner.tune_strategy()
     elapsed_time = time.time() - start_time
@@ -109,10 +81,13 @@ def tune_strategy(strategy_name, price_relative_df, use_walk_forward=False, outp
         results_df = results_df.sort_values('sharpe', ascending=False)
     results_df.to_csv(output_path, index=False)
     
-    print(f"\nTuning completed in {elapsed_time:.2f} seconds")
+    print(f"\nResults for strategy: {strategy_name}")
+    print(f"{'='*40}")
+    print(f"Tuning completed in {elapsed_time:.2f} seconds")
     print("\nBest parameter combination:")
     for key, value in best_params.items():
         print(f"{key}: {value}")
+    print(f"{'='*80}\n")
     
     # Add additional information to best parameters
     best_params['strategy_name'] = strategy_name

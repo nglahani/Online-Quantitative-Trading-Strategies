@@ -97,26 +97,36 @@ def exponential_gradient(b, price_relative_vectors, learning_rate=0.1, smoothing
 
 
 # Strategy 6: Follow-The-Leader
-def follow_the_leader(b, price_relative_vectors, gamma=1.0, alpha = 2.0):
-    """
-    Uses cumulative log returns to identify the best-performing portfolio 
-    and then blends it with the previous portfolio using gamma-smoothing.
-    """
+def follow_the_leader(b_init, price_relative_vectors, gamma=1.0, alpha=2.0):
+    """Implementation of Follow-the-Leader with stability improvements"""
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
-    b_n[0] = b
-
-    # Precompute cumulative log returns for efficiency
-    log_returns = np.log(price_relative_vectors + 1e-15)
-    cum_log_returns = np.cumsum(log_returns, axis=0)
-
+    b_n[0] = b_init.copy()
+    
     for t in range(1, T):
-        # Use cumulative log returns up to time t-1 to form the leader portfolio
-        b_star = np.exp(alpha * cum_log_returns[t-1])
-        b_star /= np.sum(b_star)
-        # Blend with the previous portfolio using smoothing parameter gamma
-        b_n[t] = (1 - gamma) * b_star + gamma * b_n[t-1]
-        b_n[t] /= np.sum(b_n[t])
+        # Calculate historical returns with stability threshold
+        historical_returns = np.maximum(np.cumprod(price_relative_vectors[:t], axis=0), 1e-10)
+        
+        # Calculate weights with power function and stability constant
+        weights = np.power(historical_returns[-1], alpha) + 1e-10
+        
+        # Normalize with numeric stability
+        sum_weights = np.sum(weights)
+        if sum_weights > 1e-10:
+            b_n[t] = weights / sum_weights
+        else:
+            b_n[t] = np.ones(N) / N  # Fallback to uniform allocation
+            
+        # Apply momentum factor
+        if gamma != 1.0:
+            b_n[t] = gamma * b_n[t] + (1 - gamma) * b_n[t-1]
+            # Ensure final normalization
+            sum_b = np.sum(b_n[t])
+            if sum_b > 1e-10:
+                b_n[t] /= sum_b
+            else:
+                b_n[t] = np.ones(N) / N
+    
     return b_n
 
 #Strategy 7: Follow the Regularized Leader

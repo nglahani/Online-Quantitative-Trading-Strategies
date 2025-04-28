@@ -1,3 +1,17 @@
 learning_rate,base_experts,avg_val_final_wealth,avg_val_sharpe,avg_val_max_drawdown
-0.1,"['cwmr', 'pamr', 'follow_the_regularized_leader']",3.8652564867921884,1.4773102924743187,-0.28503140813869465
-1.0,"['cwmr', 'pamr', 'follow_the_regularized_leader']",4.584557292940255,1.445426207152932,-0.2984845213352562
+0.005,"['cwmr', 'pamr', 'follow_the_regularized_leader']",3.7833944154660903,1.4785604840151243,-0.2835166931159937
+0.01,"['cwmr', 'pamr', 'follow_the_regularized_leader']",3.7876799827278886,1.4784425764709221,-0.2835967777507876
+0.015,"['cwmr', 'pamr', 'follow_the_regularized_leader']",3.79196864466752,1.4783232004761087,-0.2836768231024278
+0.02,"['cwmr', 'pamr', 'follow_the_regularized_leader']",3.796260305995653,1.4782023699184443,-0.2837568289869318
+0.02,"['cwmr', 'pamr', 'rmr', 'olmar']",2.4303356336950768,1.3474286981190366,-0.23246819712807015
+0.015,"['cwmr', 'pamr', 'rmr', 'olmar']",2.4286377976609486,1.3473818522291707,-0.23240466320744285
+0.01,"['cwmr', 'pamr', 'rmr', 'olmar']",2.4269426054737204,1.3473345230894267,-0.2323411235885629
+0.005,"['cwmr', 'pamr', 'rmr', 'olmar']",2.4252500776602863,1.3472867056159843,-0.23227757850768932
+0.005,"['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.7457710596397855,1.249395293715612,-0.2738820304373434
+0.015,"['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.750055225516756,1.2481443782136528,-0.2709396930357049
+0.01,"['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.739662011540427,1.2474910605061211,-0.27169276743809334
+0.02,"['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.729418892934358,1.2429861160824045,-0.2720412916315054
+0.015,"['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.5453976152800926,1.0441294474473086,-0.27811755625258733
+0.01,"['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.533627834785848,1.0304620953631023,-0.27545469735508765
+0.005,"['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.516244437828901,1.0249550063402002,-0.2755913799572468
+0.02,"['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']",2.527515693624104,1.0198052958596187,-0.2781011933439995

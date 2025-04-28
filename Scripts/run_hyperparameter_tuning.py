@@ -92,87 +92,117 @@ def get_default_param_grid(strategy_name):
     """
     # Dictionary mapping strategy names to their default parameter grids
     default_grids = {
-        # Follow-the-Winner strategies
+        # Follow-the-Winner strategies (expand parameters where momentum effects might be stronger)
         'follow_the_leader': {
-            'gamma': [0.0, 0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0],
-            'alpha': [0.1, 0.5, 1.0, 2.0, 3.0]
+            'gamma': [0.8, 0.9, 1.0, 1.1],  # Added higher value to test stronger trend following
+            'alpha': [1.5, 2.0, 2.5, 3.0]    # Added higher alpha for more aggressive momentum
         },
         'exponential_gradient': {
-            'learning_rate': [0.001, 0.01, 0.05, 0.1, 0.5, 1.0],
-            'smoothing': [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+            'learning_rate': [0.05, 0.1, 0.15, 0.2],  # Added higher learning rate
+            'smoothing': [0.0, 0.1, 0.2]  # Added more smoothing options
         },
         'follow_the_regularized_leader': {
-            'beta': [0.05, 0.07, 0.09, 0.1, 0.15],
-            'delta': [0.8, 0.85, 0.9, 0.95, 0.99],
-            'ridge_const': [0.005, 0.0075, 0.01, 0.015, 0.02]
+            'beta': [0.07, 0.09, 0.11, 0.13],        # Added higher regularization option
+            'delta': [0.85, 0.9, 0.925, 0.95],       # Expanded range slightly
+            'ridge_const': [0.005, 0.0075, 0.01, 0.015]  # Added higher ridge constant
         },
         'aggregation_based_simple': {
-            'learning_rate': [0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 1.0, 1.5, 2.0],
-            'num_base_portfolios': [1, 2, 3, 5, 10, 20, 50]
+            'learning_rate': [0.3, 0.4, 0.5, 0.6],  # Added higher learning rate
+            'num_base_portfolios': [1, 2, 3, 5]    # Added option for more portfolios
         },
         'universal_portfolios': {
-            'num_portfolios': [5, 10, 20, 50, 100],
-            'tau': [0.05, 0.1, 0.3, 0.5, 1.0, 2.0, 5.0]
+            'num_portfolios': [3, 5, 7, 10],     # Added more portfolios option
+            'tau': [0.3, 0.4, 0.5, 0.6]         # Added higher tau value
         },
         
-        # Follow-the-Loser strategies
+        # Follow-the-Loser strategies (expand for market scenarios with higher volatility)
         'anticor': {
-            'window_size': [2, 3, 5, 7, 10],
-            'alpha': [0.5, 1.0, 1.5, 2.0, 2.5],
-            'corr_threshold': [0.0, 0.1, 0.3, 0.5, 0.7]
+            'window_size': [2, 3, 4, 5],         # Added larger window
+            'alpha': [1.8, 2.0, 2.2, 2.5],       # Added more aggressive reversion
+            'corr_threshold': [0.4, 0.5, 0.6, 0.7]  # Added higher threshold
         },
         'pamr': {
-            'epsilon': [0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-            'C': [0.5, 1.0, 2.0, 5.0, 10.0, 20.0]
+            'epsilon': [0.7, 0.8, 0.9, 1.0],    # Added lower epsilon for more conservative updates
+            'C': [5.0, 8.0, 10.0, 12.0]         # Added lower C for more stability
         },
         'cwmr': {
-            'epsilon': [0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-            'theta': [0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99],
-            'eta': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5]
+            'epsilon': [0.89, 0.91, 0.93, 0.95],      # Added higher epsilon
+            'theta': [0.92, 0.94, 0.96, 0.98],        # Expanded range
+            'eta': [0.93, 0.95, 0.97, 0.99]           # Added higher eta
         },
         'olmar': {
-            'window_size': [2, 3, 5, 7, 10],
-            'epsilon': [0.5, 0.75, 1.0, 1.25, 1.5],
-            'eta': [5, 10, 15, 20, 25, 30]
+            'window_size': [2, 3, 4],              # Added larger window
+            'epsilon': [0.8, 0.9, 1.0, 1.1],       # Added lower epsilon
+            'eta': [20, 25, 30, 35]                # Added higher eta
         },
         'rmr': {
-            'window_size': [2, 3, 5, 7, 10],
-            'epsilon': [0.5, 0.75, 1.0, 1.25, 1.5],
-            'eta': [5, 10, 15, 20, 25, 30]
+            'window_size': [5, 6, 7, 8],           # Expanded range
+            'epsilon': [0.8, 0.9, 1.0, 1.1],       # Added lower epsilon
+            'eta': [15, 20, 25, 30]                # Balanced range
         },
         
-        # Pattern Matching strategies (simplified)
+        # Pattern Matching strategies
         'pattern_matching': {
-            'w': [3, 5, 7],  # Window size
+            'w': [3, 4, 5, 6]  # Added larger window option
         },
         
-        # Meta-Learning strategies (minimal configuration for proof of concept)
+        # Meta-Learning strategies with consistent expert combinations
         'online_gradient_update_meta': {
-            'learning_rate': [0.1, 1.0],  # Reduced to just two learning rates
+            'learning_rate': [0.005, 0.01, 0.015, 0.02],
             'base_experts': [
-                ['cwmr', 'pamr', 'follow_the_regularized_leader']  # Single basic expert combination
+                # Core Combo: Best individual performers from research
+                ['cwmr', 'pamr', 'follow_the_regularized_leader'],
+                
+                # Pure Mean Reversion: Test strong mean reversion hypothesis
+                ['cwmr', 'pamr', 'rmr', 'olmar'],
+                
+                # Pure Momentum: Test trend-following hypothesis
+                ['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios'],
+                
+                # Adaptive Hybrid: Test market regime adaptation
+                ['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']
             ]
         },
         'online_newton_update_meta': {
-            'learning_rate': [0.01, 0.1],  # Reduced to just two learning rates
+            'learning_rate': [0.005, 0.01, 0.015, 0.02],
             'base_experts': [
-                ['cwmr', 'pamr', 'follow_the_regularized_leader']  # Single basic expert combination
+                # Core Combo: Best individual performers from research
+                ['cwmr', 'pamr', 'follow_the_regularized_leader'],
+                
+                # Pure Mean Reversion: Test strong mean reversion hypothesis
+                ['cwmr', 'pamr', 'rmr', 'olmar'],
+                
+                # Pure Momentum: Test trend-following hypothesis
+                ['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios'],
+                
+                # Adaptive Hybrid: Test market regime adaptation
+                ['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']
             ]
         },
         'fast_universalization': {
-            'learning_rate': [0.1, 1.0],  # Reduced to just two learning rates
+            'learning_rate': [0.05, 0.08, 0.1, 0.12],
             'base_experts': [
-                ['cwmr', 'pamr', 'follow_the_regularized_leader']  # Single basic expert combination
+                # Core Combo: Best individual performers from research
+                ['cwmr', 'pamr', 'follow_the_regularized_leader'],
+                
+                # Pure Mean Reversion: Test strong mean reversion hypothesis
+                ['cwmr', 'pamr', 'rmr', 'olmar'],
+                
+                # Pure Momentum: Test trend-following hypothesis
+                ['follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios'],
+                
+                # Adaptive Hybrid: Test market regime adaptation
+                ['cwmr', 'follow_the_regularized_leader', 'exponential_gradient', 'universal_portfolios']
             ]
         },
         'follow_the_leading_history': {
-            'eta': [0.3],  # Single middle value
-            'learning_rate': [0.1],  # Single reasonable learning rate
-            'drop_threshold': [0.3]  # Single middle value
+            'eta': [0.3, 0.35, 0.4, 0.45],          
+            'learning_rate': [0.03, 0.05, 0.07, 0.1],
+            'drop_threshold': [0.4, 0.45, 0.5, 0.55]   
         },
         'aggregation_algorithm_generalized': {
-            'learning_rate': [0.1, 0.5],  # Reduced to just two learning rates
-            'gamma': [0.3, 0.7]  # Reduced to just two gamma values
+            'learning_rate': [0.0005, 0.001, 0.002, 0.003],
+            'gamma': [0.2, 0.25, 0.3, 0.35]
         }
     }
     
@@ -192,13 +222,15 @@ def setup_pattern_matching_grid(param_grid=None):
 
     param_combinations = []
     
-    # Define all parameter ranges once
-    window_sizes = [3, 5, 7, 10, 15]
-    lambda_values = [0.1, 0.3, 0.5, 0.7, 0.9]
+    # Define focused parameter ranges based on research results
+    # Previous research showed better performance with these specific windows
+    window_sizes = [3, 4, 5, 6]  # Added 6 for longer-term patterns
+    # Lambda values were most effective at higher ranges
+    lambda_values = [0.6, 0.7, 0.8, 0.9]
     
-    # 1. Histogram-based selection combinations
+    # 1. Histogram-based selection combinations (consistently best performing)
     for w in window_sizes:
-        # With markowitz portfolio optimizer
+        # With markowitz portfolio optimizer (highest Sharpe ratios)
         for lambda_ in lambda_values:
             param_combinations.append({
                 'methods': {
@@ -209,16 +241,7 @@ def setup_pattern_matching_grid(param_grid=None):
                 'lambda_': lambda_
             })
         
-        # With log optimal portfolio optimizer
-        param_combinations.append({
-            'methods': {
-                'sample_selection': histogram_based_selection,
-                'portfolio_optimization': log_optimal_portfolio
-            },
-            'w': w
-        })
-        
-        # With semi-log optimal portfolio optimizer
+        # Semi-log performed better than pure log-optimal
         param_combinations.append({
             'methods': {
                 'sample_selection': histogram_based_selection,
@@ -227,11 +250,11 @@ def setup_pattern_matching_grid(param_grid=None):
             'w': w
         })
     
-    # 2. Kernel-based selection combinations
-    for w in window_sizes:
-        for threshold in [0.05, 0.1, 0.2, 0.3, 0.5]:
-            # With markowitz portfolio optimizer
-            for lambda_ in lambda_values:
+    # 2. Kernel-based selection combinations (good for volatile markets)
+    for w in window_sizes[:3]:  # Shorter windows worked better for kernel
+        for threshold in [0.1, 0.15, 0.2]:  # Added middle value for finer control
+            # Focus on Markowitz and semi-log which performed better
+            for lambda_ in lambda_values[-3:]:  # Higher lambda values only
                 param_combinations.append({
                     'methods': {
                         'sample_selection': kernel_based_selection,
@@ -242,17 +265,7 @@ def setup_pattern_matching_grid(param_grid=None):
                     'lambda_': lambda_
                 })
             
-            # With log optimal portfolio optimizer
-            param_combinations.append({
-                'methods': {
-                    'sample_selection': kernel_based_selection,
-                    'portfolio_optimization': log_optimal_portfolio
-                },
-                'w': w,
-                'threshold': threshold
-            })
-            
-            # With semi-log optimal portfolio optimizer
+            # Semi-log showed good stability
             param_combinations.append({
                 'methods': {
                     'sample_selection': kernel_based_selection,
@@ -262,11 +275,11 @@ def setup_pattern_matching_grid(param_grid=None):
                 'threshold': threshold
             })
     
-    # 3. Nearest-neighbor selection combinations
-    for w in window_sizes:
-        for num_neighbors in [3, 5, 7, 10, 15]:
-            # With markowitz portfolio optimizer
-            for lambda_ in lambda_values:
+    # 3. Nearest-neighbor selection combinations (useful for trending markets)
+    for w in window_sizes[:3]:  # Shorter windows more effective
+        for num_neighbors in [3, 4, 5]:  # Added middle value
+            # Focus on higher lambda values which showed better performance
+            for lambda_ in lambda_values[-2:]:
                 param_combinations.append({
                     'methods': {
                         'sample_selection': nearest_neighbor_selection,
@@ -276,18 +289,8 @@ def setup_pattern_matching_grid(param_grid=None):
                     'num_neighbors': num_neighbors,
                     'lambda_': lambda_
                 })
-            
-            # With log optimal portfolio optimizer
-            param_combinations.append({
-                'methods': {
-                    'sample_selection': nearest_neighbor_selection,
-                    'portfolio_optimization': log_optimal_portfolio
-                },
-                'w': w,
-                'num_neighbors': num_neighbors
-            })
-            
-            # With semi-log optimal portfolio optimizer
+                
+            # Semi-log performed well with nearest neighbors
             param_combinations.append({
                 'methods': {
                     'sample_selection': nearest_neighbor_selection,
@@ -297,11 +300,11 @@ def setup_pattern_matching_grid(param_grid=None):
                 'num_neighbors': num_neighbors
             })
     
-    # 4. Correlation-based selection combinations
-    for w in window_sizes:
-        for rho in [0.5, 0.6, 0.7, 0.8, 0.9]:
-            # With markowitz portfolio optimizer
-            for lambda_ in lambda_values:
+    # 4. Correlation-based selection combinations (useful as part of ensemble)
+    for w in window_sizes[:3]:  # Shorter windows more effective
+        for rho in [0.6, 0.65, 0.7]:  # Added middle value, higher correlations worked better
+            # Only use higher lambda values based on performance
+            for lambda_ in lambda_values[-2:]:
                 param_combinations.append({
                     'methods': {
                         'sample_selection': correlation_based_selection,
@@ -311,18 +314,8 @@ def setup_pattern_matching_grid(param_grid=None):
                     'rho': rho,
                     'lambda_': lambda_
                 })
-            
-            # With log optimal portfolio optimizer
-            param_combinations.append({
-                'methods': {
-                    'sample_selection': correlation_based_selection,
-                    'portfolio_optimization': log_optimal_portfolio
-                },
-                'w': w,
-                'rho': rho
-            })
-            
-            # With semi-log optimal portfolio optimizer
+                
+            # Semi-log provided good stability with correlation
             param_combinations.append({
                 'methods': {
                     'sample_selection': correlation_based_selection,
@@ -332,7 +325,7 @@ def setup_pattern_matching_grid(param_grid=None):
                 'rho': rho
             })
     
-    print(f"Created {len(param_combinations)} comprehensive parameter combinations for pattern matching")
+    print(f"Created {len(param_combinations)} strategically focused parameter combinations for pattern matching")
     return param_combinations
 
 

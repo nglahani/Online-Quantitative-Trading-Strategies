@@ -42,8 +42,30 @@ For a detailed discussion of the methodologies, experiments, and empirical resul
 
 ## Features
 
+- **Advanced Tuning Framework:** Enhanced hyperparameter optimization with support for:
+  - Walk-forward validation with configurable windows
+  - Two-level parallel processing (strategies and parameters)
+  - Customizable parameter grids
+  - Strategy-specific tuner classes
+
+- **Expanded Strategy Coverage:** 
+  - Follow-the-Winner: Exponential Gradient, Follow-the-Leader, Follow-the-Regularized-Leader
+  - Follow-the-Loser: Anticorrelation, PAMR, CWMR, OLMAR, RMR
+  - Pattern-Matching: Histogram-based, Kernel-based, Nearest-neighbor selection methods
+  - Meta-Learning: Online Gradient/Newton Updates, Fast Universalization
+  - Hybrid approaches combining mean reversion and momentum strategies
+
+- **Performance Optimization:**
+  - Improved parallel processing with automatic CPU core allocation
+  - Smart validation window sizing based on data characteristics
+  - Enhanced error handling and recovery for long-running tuning sessions
+
+- **Extended Metrics:**
+  - Comprehensive evaluation including Sharpe ratio, maximum drawdown, exponential growth
+  - Average validation metrics across time windows
+  - Runtime performance tracking
+
 - **Modular Design:** Clean separation between data processing, algorithm implementation, and performance evaluation.
-- **Extensive Strategy Coverage:** Implements diverse strategies from momentum to mean-reversion, as well as ensemble meta-learning methods.
 - **Interactive Notebooks:** Detailed Jupyter notebooks (e.g., `Active_Tuner.ipynb`, various strategy comparisons) for hands-on experimentation.
 - **Robust Performance Metrics:** Computes cumulative wealth, exponential growth rate, and Sharpe ratio for a standardized evaluation of trading methods.
 - **Hyperparameter Optimization:** Incorporates grid search for fine-tuning strategy parameters to maximize key performance metrics.
@@ -51,37 +73,62 @@ For a detailed discussion of the methodologies, experiments, and empirical resul
 
 ## Installation and Dependencies
 
-This project requires Python 3.13. The core dependencies are listed in the `requirements.txt` file located in the Scripts folder. To install the necessary packages, run:
+This project requires Python 3.13. To install all dependencies:
 
 ```bash
 pip install -r Scripts/requirements.txt
-
 ```
 
-**Dependencies include (but may not be limited to):**
-- numpy
-- pandas
-- scipy
-- joblib
-- matplotlib\
-- seaborn
+**Core Dependencies:**
+- numpy>=1.24.0
+- pandas>=2.0.0
+- scipy>=1.10.0
+- joblib>=1.3.0
+- matplotlib>=3.7.0
+- seaborn>=0.12.0
+- tqdm>=4.65.0
+
+**Optional Dependencies:**
+- jupyter>=1.0.0 (for running notebooks)
+- pytest>=7.0.0 (for running tests)
 
 If additional dependencies are needed, please update the `requirements.txt` accordingly.
 
 ## Usage
 
-1. **Data Preparation:**  
-   Ensure that the Data folder contains the expected CSV files for price data. These can downloaded in the provided structure from QuantQuote Minute Data. The script `utilities.py` and the notebook `Price_Relative_Vector_Creation.ipynb` handle the extraction and preprocessing of the historical price data.
+### 1. Data Preparation
+Ensure price data is available in CSV format in the Data folder. The data pipeline includes:
+- Historical price data preprocessing (`Price_Relative_Vector_Creation.ipynb`)
+- Automated data validation and cleaning
+- Support for various data sources and formats
 
-2. **Running the Notebooks:**  
-   Use Jupyter Notebook or JupyterLab to open and run notebooks such as:
-   - `Active_Tuner.ipynb` for hyperparameter tuning.
-   - `FTL_Strategy_Comparison.ipynb`, `FTW_Strategy_Comparison.ipynb`, `ML_Strategy_Comparison.ipynb`, and `PM_Strategy_Comparison.ipynb` for interactive strategy comparisons.
-   
-   These notebooks provide step-by-step details on how each strategy is executed and compared.
+### 2. Strategy Configuration
+The framework offers multiple ways to configure and tune strategies:
 
-3. **Evaluating Performance:**  
-   The framework computes three performance metrics for each strategy including cumulative wealth, exponential growth rate, and the Sharpe ratio. You can customize these evaluations by modifying the parameters in the notebooks and utility functions.
+a) Single Strategy Tuning:
+```bash
+python Scripts/run_hyperparameter_tuning.py strategy_name [options]
+```
+
+b) Multiple Strategy Tuning:
+```bash
+python Scripts/tune_multiple_strategies.py --strategies strategy1 strategy2 [options]
+```
+
+c) Category-based Tuning:
+```bash
+python Scripts/tune_multiple_strategies.py --category [ftw|ftl|pm|meta] [options]
+```
+
+Common options:
+- `--walk-forward`: Enable walk-forward validation
+- `--val-windows N`: Set number of validation windows
+- `--val-size X`: Set validation window size (0-1)
+- `--parallel-strategies`: Enable parallel strategy tuning
+- `--n-jobs N`: Set number of parallel jobs
+
+### 3. Performance Analysis
+Results are saved in `Data/Tuning Data/` with detailed metrics for each parameter combination.
 
 ## Documentation and Research Paper
 

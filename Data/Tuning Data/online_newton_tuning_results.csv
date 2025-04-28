@@ -1,9 +1,0 @@
-algorithm,learning_rate,base_experts,final_wealth,exp_growth,sharpe
-online_newton_update_meta,0.01,"['cwmr', 'follow_the_regularized_leader', 'pamr']",387.4096303772111,0.0019739922522906566,1.5562235334656591
-online_newton_update_meta,0.001,"['cwmr', 'follow_the_regularized_leader', 'pamr']",392.7121447415704,0.00197849515977605,1.5447176571957453
-online_newton_update_meta,0.001,"['cwmr', 'follow_the_regularized_leader']",189.74148882481973,0.0017375497053963504,1.408783852985469
-online_newton_update_meta,0.01,"['cwmr', 'follow_the_regularized_leader']",162.60574495958,0.0016864287937543197,1.3708553289609364
-online_newton_update_meta,0.01,"['cwmr', 'pamr']",146.75892084399575,0.0016524648049875822,1.2890698397593565
-online_newton_update_meta,0.001,"['cwmr', 'pamr']",141.08129864137868,0.0016393959292233635,1.2762957930213596
-online_newton_update_meta,0.001,"['follow_the_regularized_leader', 'pamr']",105.4918106236567,0.0015431047782321545,1.2388823110035616
-online_newton_update_meta,0.01,"['follow_the_regularized_leader', 'pamr']",99.69379670672716,0.001524380077986277,1.2239781954507751
