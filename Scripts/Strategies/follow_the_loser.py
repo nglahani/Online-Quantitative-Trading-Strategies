@@ -11,7 +11,7 @@ from Strategies.helper import *
 
 
 # Strategy 9: Anti-Correlation (Anticor) - Simplified and Vectorized
-def anticor(b, price_relative_vectors, window_size=3, alpha=2.0, corr_threshold=0.5):
+def anticor(b, price_relative_vectors, window_size=3, alpha=2.5, corr_threshold=0.5):
     """
     Implements a simplified anticorrelation strategy with additional parameters.
     
@@ -119,7 +119,7 @@ def pamr(b, price_relative_vectors, epsilon=0.9, C=10.0):
 
 
 #Strategy 11: CWMR (Confidence-Weighted Mean Reversion)
-def cwmr(b, price_relative_vectors, epsilon=0.91, theta=0.96, eta=.95):
+def cwmr(b, price_relative_vectors, epsilon=0.89, theta=0.92, eta=.93):
     """
     Implements a simplified version of CWMR with an additional learning rate factor (eta).
     Maintains a mean vector (mu_t) and covariance matrix (Sigma_t) to update the portfolio.
@@ -167,7 +167,7 @@ def cwmr(b, price_relative_vectors, epsilon=0.91, theta=0.96, eta=.95):
 
 
 #Strategy 12: OLMAR 
-def olmar(b, price_relative_vectors, window_size=2, epsilon=1.0, eta=25):
+def olmar(b, price_relative_vectors, window_size=2, epsilon=.8, eta=20):
     """
     Implements a simplified OLMAR strategy with a learning rate multiplier.
     Uses a moving average of past price relatives as a prediction.
@@ -207,7 +207,7 @@ def olmar(b, price_relative_vectors, window_size=2, epsilon=1.0, eta=25):
     return b_n
 
 #Strategy 13: Robust Median Reversion
-def rmr(b, price_relative_vectors, window_size=7, epsilon=1.0, eta=20):
+def rmr(b, price_relative_vectors, window_size=8, epsilon=1.1, eta=30):
     """
     Implements a robust median reversion (RMR) strategy with an additional learning rate multiplier.
     Uses an L1-median computed over a sliding window of price relatives to form predictions.

@@ -10,7 +10,7 @@ from scipy.optimize import minimize
 from Strategies.helper import *
 
 # Strategy 4: Universal Portfolios (Approximation)
-def universal_portfolios(b, price_relative_vectors, num_portfolios=3, tau=.4):
+def universal_portfolios(b, price_relative_vectors, num_portfolios=3, tau=.3):
     """
     Cover's Universal Portfolios, approximated by sampling 'num_portfolios' random points
     on the simplex. We track the wealth of each sampled portfolio over time and then 
@@ -54,7 +54,7 @@ def universal_portfolios(b, price_relative_vectors, num_portfolios=3, tau=.4):
 
 
 # Strategy 5: Exponential Gradient
-def exponential_gradient(b, price_relative_vectors, learning_rate=0.1, smoothing=0.0):
+def exponential_gradient(b, price_relative_vectors, learning_rate=0.05, smoothing=0.0):
     """
     Implements the exponential gradient update in a vectorized manner with a smoothing parameter.
     
@@ -97,7 +97,7 @@ def exponential_gradient(b, price_relative_vectors, learning_rate=0.1, smoothing
 
 
 # Strategy 6: Follow-The-Leader
-def follow_the_leader(b_init, price_relative_vectors, gamma=1.0, alpha=2.0):
+def follow_the_leader(b_init, price_relative_vectors, gamma=.8, alpha=1.5):
     """Implementation of Follow-the-Leader with stability improvements"""
     T, N = price_relative_vectors.shape
     b_n = np.zeros((T, N))
@@ -130,7 +130,7 @@ def follow_the_leader(b_init, price_relative_vectors, gamma=1.0, alpha=2.0):
     return b_n
 
 #Strategy 7: Follow the Regularized Leader
-def follow_the_regularized_leader(b, price_relative_vectors, beta=0.09, delta=0.925, ridge_const=.0075):
+def follow_the_regularized_leader(b, price_relative_vectors, beta=0.13, delta=0.925, ridge_const=.015):
     """
     Implements a simplified ONS-style Follow-The-Regularized Leader with an adjustable ridge regularization constant.
     
@@ -170,7 +170,7 @@ def follow_the_regularized_leader(b, price_relative_vectors, beta=0.09, delta=0.
     return b_n
 
 #Strategy 8: Aggregation-Based Simple
-def aggregation_based_simple(b, price_relative_vectors, learning_rate=0.4, num_base_portfolios=1):
+def aggregation_based_simple(b, price_relative_vectors, learning_rate=0.4, num_base_portfolios=3):
     """
     Aggregates a set of base portfolios using their cumulative performance.
     This version updates the portfolio performance iteratively to avoid

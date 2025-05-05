@@ -25,7 +25,7 @@ def histogram_based_selection(price_relative_vectors, w=4, bins=[(0,0.5),(0.5,1)
             C.append(i + w)
     return C
 
-def kernel_based_selection(price_relative_vectors, w=4, threshold=0.1):
+def kernel_based_selection(price_relative_vectors, w=5, threshold=0.1):
     n = len(price_relative_vectors)
     if n < w:
         return []
@@ -39,7 +39,7 @@ def kernel_based_selection(price_relative_vectors, w=4, threshold=0.1):
             C.append(i)
     return C
 
-def nearest_neighbor_selection(price_relative_vectors, w=4, num_neighbors=3):
+def nearest_neighbor_selection(price_relative_vectors, w=3, num_neighbors=5):
     n = len(price_relative_vectors)
     if n < w:
         return []
@@ -53,7 +53,7 @@ def nearest_neighbor_selection(price_relative_vectors, w=4, num_neighbors=3):
     C = [idx for idx,_ in distances[:num_neighbors]]
     return C
 
-def correlation_based_selection(price_relative_vectors, w=4, rho=0.7):
+def correlation_based_selection(price_relative_vectors, w=3, rho=0.6):
     n = len(price_relative_vectors)
     if n < w:
         return []
